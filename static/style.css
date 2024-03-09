@@ -1,0 +1,87 @@
+/* This is your CSS content as per the requirements */
+/* Remember to update image paths if needed */
+
+/* style.css */
+
+body, html {
+    height: 100%;
+    margin: 0;
+    color: white;
+    background-color: #121212;
+    font-family: Arial, sans-serif;
+}
+
+.header {
+    background-color: #1e1e1e;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.logo {
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.score-box {
+    background-color: #333;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+.matchup {
+    background-color: #252526;
+    margin: 20px;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.team {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: transparent;
+    border: 2px solid transparent;
+    padding: 10px;
+    cursor: pointer;
+    transition: border-color 0.3s;
+}
+
+.team:hover {
+    border-color: #add8e6; /* Slight highlight on hover for better UX */
+}
+
+.team.selected {
+    border-color: #add8e6; /* Highlight the selected team */
+}
+
+.team-logo {
+    margin-right: 10px;
+}
+
+.vote-percent {
+    margin-left: auto;
+}
+
+.select-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100px;
+    height: 100px;
+    border: 1px solid #f0f0f0;
+    margin-right: 10px;
+}
+
+.select-box img {
+    max-width: 80%;
+    max-height: 80%;
+}
+
+.timer {
+    font-size: 0.8em;
+    color: #999;
+    margin-bottom: 10px;
+}
+
