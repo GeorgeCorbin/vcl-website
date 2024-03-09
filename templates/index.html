@@ -36,15 +36,15 @@
       <div class="select-box">
         <img src="{{ url_for('static', filename='images/gtlogo.png') }}" alt="Team 1 Logo">
       </div>
-      <span>Team 1</span>
+      <span>Georgia Tech</span>
       <div class="vote-percent">{{ game1['team1'] / (total1 if total1 > 0 else 1) * 100 }}%</div>
       <input type="radio" name="game1vote" style="display:none">
     </div>
     <div class="team" onclick="vote('game1', 'team2', this)">
       <div class="select-box">
-        <img src="{{ url_for('static', filename='images/team2logo.png') }}" alt="Team 2 Logo">
+        <img src="{{ url_for('static', filename='images/texaslogo.png') }}" alt="Team 2 Logo">
       </div>
-      <span>Team 2</span>
+      <span>Texas</span>
       <div class="vote-percent">{{ game1['team2'] / (total1 if total1 > 0 else 1) * 100 }}%</div>
       <input type="radio" name="game1vote" style="display:none">
     </div>
