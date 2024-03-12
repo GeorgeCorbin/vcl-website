@@ -13,8 +13,9 @@
     </form>
     <br>
     {% for game in games %}
-    <div class="game">
+    <div class="game"><br><br>
         <div class="timer">Game on {{ game['Date'] }} at {{ game['Time'] }}</div>
+        <div class="location">Location: {{ game['Location'] }}</div>
         <div class="team" onclick="vote('{{ game['game_id'] }}', '{{ game['away_team_id'] }}', this)">
             <div class="select-box">
                 <img src="{{ url_for('static', filename='images/' ~ game['away_team_logo']) }}" alt="Away Team Logo">

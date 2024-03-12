@@ -1,51 +1,14 @@
-0,1,2,3,4
-Fri Mar 15,7:00 pm,Auburn,Central Florida,Auburn
-Fri Mar 15,7:00 pm,South Carolina-Bluff Road Practice Fields,South Florida,South Carolina
-Fri Mar 15,7:00 pm,Georgia Tech Roe Stamps Field,Arizona State,Georgia Tech
-Fri Mar 15,7:00 pm,Spartan Greens Turf Complex,Miami (Ohio),Michigan State
-Fri Mar 15,7:00 pm,Davidson Fields,Central Conn. State,Davidson
-Fri Mar 15,7:00 pm,Virginia Tech - The Marching Virginians Center,Elon,Virginia Tech DII
-Fri Mar 15,7:45 pm,Gagliardi Dome (SJU),North Dakota State,St. John's
-Fri Mar 15,8:00 pm,Bolles High School,Liberty,Florida
-Sat Mar 16,11:00 am,University of Buffalo,Northeastern,Buffalo
-Sat Mar 16,11:00 am,ETBU Tiger Field,Tulane,East Texas Baptist
-Sat Mar 16,12:00 pm,Cal Poly SLO,California,Cal Poly
-Sat Mar 16,12:00 pm,Auburn,Western Michigan,Central Florida
-Sat Mar 16,12:30 pm,Gagliardi Dome (SJU),Central Michigan,North Dakota State
-Sat Mar 16,1:00 pm,UNC-Wilmington,Charleston,UNC-Wilmington
-Sat Mar 16,1:00 pm,River Bluff High School,New Hampshire,South Florida
-Sat Mar 16,1:00 pm,Florida Atlantic University,Tampa,Florida Atlantic
-Sat Mar 16,1:00 pm,University of Nevada - Reno,Stanford,Nevada
-Sat Mar 16,1:00 pm,Clemson Rec Sports Fields,East Carolina,Clemson
-Sat Mar 16,1:30 pm,San Diego State University,UCLA,Sonoma State
-Sat Mar 16,2:00 pm,David Sitton Field,Chapman,Arizona
-Sat Mar 16,2:45 pm,Stillwater Dome,St. John's,St. Thomas
-Sat Mar 16,3:00 pm,LMU,Moorpark,Loyola Marymount
-Sat Mar 16,3:00 pm,Oregon State University,Utah,Oregon State
-Sat Mar 16,3:00 pm,Cal State San Marcos,UC Irvine,Cal State San Marcos
-Sat Mar 16,4:00 pm,Joe Aillet Stadium,Tulane,Louisiana Tech
-Sat Mar 16,4:00 pm,UNC-Charlotte,Central Conn. State,UNC-Charlotte
-Sat Mar 16,6:00 pm,UC Davis,Saint Mary's,UC Davis
-Sat Mar 16,6:00 pm,Spartan Greens Turf Complex,Missouri,Michigan State
-Sat Mar 16,6:00 pm,Florida Gulf Coast University,Coastal Carolina,Florida Gulf Coast
-Sat Mar 16,7:00 pm,Cal State Fullerton,Biola,Cal State Fullerton
-Sat Mar 16,7:00 pm,Grand Canyon University,Washington,Grand Canyon
-Sat Mar 16,7:00 pm,Spartan RecField,Cal Poly-Humboldt,San Jose State
-Sat Mar 16,7:30 pm,Northwest Nazarene,Montana,Northwest Nazarene
-Sat Mar 16,7:30 pm,Arizona Christian University,Long Beach State,Arizona Christian
-Sat Mar 16,8:00 pm,Bolles High School,Brigham Young,Florida
-Sun Mar 17,8:45 am,Gagliardi Dome (SJU),Central Michigan,Minn.-Duluth
-Sun Mar 17,11:00 am,Arizona Christian University,Long Beach State,Fort Lewis
-Sun Mar 17,11:00 am,Grand Valley State,Missouri,Grand Valley State
-Sun Mar 17,12:00 pm,College of Idaho,Montana,College of Idaho
-Sun Mar 17,12:00 pm,Georgia Club Sports Complex,Arizona State,Georgia
-Sun Mar 17,12:00 pm,Auburn,Western Michigan,Auburn
-Sun Mar 17,12:00 pm,University of Nevada - Reno,Boise State,Nevada
-Sun Mar 17,2:00 pm,Oregon - Nex-Turf Field,Utah,Oregon
-Sun Mar 17,2:00 pm,UNC-Charlotte,Davidson,UNC-Charlotte
-Sun Mar 17,3:00 pm,University of North Texas,Baylor,North Texas
-Sun Mar 17,5:00 pm,San Diego State University,Sonoma State,San Diego State
-Sun Mar 17,6:00 pm,University of Tampa,Coastal Carolina,Tampa
-Mon Mar 18,7:00 pm,South Carolina-Bluff Road Practice Fields,New Hampshire,South Carolina
-Mon Mar 18,7:30 pm,San Diego State University,Washington,San Diego State
-Mon Mar 18,8:00 pm,Miami Cook,Buffalo,Miami (Ohio)
+Date,Time,Location,away_team_id,home_team_id,score
+Sat Mar 30,3:30 pm,San Diego State University,Arizona State,San Diego State,N/A
+Sat Mar 30,4:00 pm,Washington State Home Field,Washington,Washington State,N/A
+Sat Mar 30,4:00 pm,Grand Valley State,Western Michigan,Grand Valley State,N/A
+Sat Mar 30,5:00 pm,University of South Florida,Florida,South Florida,N/A
+Sat Mar 30,5:00 pm,University of Utah,Boise State,Utah Tech,N/A
+Sat Mar 30,7:00 pm,Pacific Lutheran University,Cal Poly-Humboldt,Pacific Lutheran,N/A
+Sat Mar 30,7:00 pm,University of Miami,Florida Atlantic,Miami,N/A
+Sat Mar 30,7:00 pm,UCSD - Muir Field,UC San Diego,UC Davis,N/A
+Sat Mar 30,7:00 pm,Portola High School Stadium,San Jose State,Westcliff,N/A
+Sun Mar 31,1:00 pm,University of Puget Sound,Cal Poly-Humboldt,Puget Sound,N/A
+Sun Mar 31,1:30 pm,Kennesaw State University,Alabama,Kennesaw State,N/A
+Sun Mar 31,2:00 pm,University of Tampa,Florida Gulf Coast,Tampa,N/A
+Sun Mar 31,6:00 pm,Cal State Fullerton,UC Santa Cruz,Cal State Fullerton,N/A
