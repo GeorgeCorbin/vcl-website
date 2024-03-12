@@ -27,7 +27,7 @@ def games():
         html_content = fetch_table_data(month=current_month, page_number=page_number)
         table_data = parse_table(html_content)
         new_df = convert_to_dataframe(table_data)
-        print(new_df)
+        # print(new_df)
         all_dataframes.append(new_df)
     df = pd.concat(all_dataframes, ignore_index=True)
 
@@ -45,7 +45,7 @@ def games():
         delta_days = (game_date - current_date).days
         if 0 <= delta_days <= 7:
             filtered_games.append(game)
-    print(games_list)
+    # print(games_list)
 
     return render_template('games.html', games=filtered_games)
 

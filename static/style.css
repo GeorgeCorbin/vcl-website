@@ -91,4 +91,6 @@ body, html {
     color: #999;
     margin-bottom: 10px;
 }
-
+.score {
+    margin-right: 10px;
+}

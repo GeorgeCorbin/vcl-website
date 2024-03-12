@@ -91,7 +91,7 @@ HTML_TEMPLATE = '''
     <div class="team">
       <label class="select-box">
         <input type="radio" name="game1vote" style="display:none" onclick="alert('You voted for Team 1!')" />
-        <img src="/Users/georgecorbin/PycharmProjects/polling/gtlogo.png" alt="Team 1 Logo">
+        <img src="/Users/georgecorbin/PycharmProjects/polling/Georgia Tech.png" alt="Team 1 Logo">
       </label>
       <div class="vote-percent">{{ team1_percent }}%</div>
     </div>
