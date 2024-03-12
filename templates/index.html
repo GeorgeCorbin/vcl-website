@@ -46,15 +46,28 @@
 <!--    {% endfor %}-->
 <!--</div>-->
 <!-- index.html -->
-<table>
-    {% for row in table_data %}
-    <tr>
-        {% for cell in row %}
-        <td>{{ cell }}</td>
-        {% endfor %}
-    </tr>
-    {% endfor %}
-</table>
+
+<!--  <div id="games">-->
+<!--        {% for game in games %}-->
+<!--        <div class="game">-->
+<!--            <p>Date: {{ game['Date'] }}</p>-->
+<!--            <p>Time: {{ game['Time'] }}</p>-->
+<!--            <p>Location: {{ game['Location'] }}</p>-->
+<!--            <p>Away Team: {{ game['Away Team'] }}</p>-->
+<!--            <p>Home Team: {{ game['Home Team'] }}</p>-->
+<!--        </div>-->
+<!--        {% endfor %}-->
+<!--    </div>-->
+
+<!--<table>-->
+<!--    {% for row in table_data %}-->
+<!--    <tr>-->
+<!--        {% for cell in row %}-->
+<!--        <td>{{ cell }}</td>-->
+<!--        {% endfor %}-->
+<!--    </tr>-->
+<!--    {% endfor %}-->
+<!--</table>-->
 
 <!-- More existing content -->
 
@@ -97,6 +110,12 @@
       <input type="radio" name="game2vote" style="display:none">
     </div>
   </div>
+
+  <!-- index.html -->
+  <form action="{{ url_for('games') }}">
+      <button type="submit">View Games</button>
+  </form>
+
 
 </body>
 </html>

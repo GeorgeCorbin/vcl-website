@@ -10,23 +10,24 @@ votes = {
     'game2': {'team3': 0, 'team4': 0}
 }
 
-@app.route('/')
-def home():
-    # Assume matches is a list of dictionaries containing match data
-    # matches = fetch_match_data()
-    # You might want to calculate time until each match here and add it to the matches info
-    # for match in matches:
-    #     match['hours'], match['minutes'] = calculate_time_until_match(match['datetime'])
-    # return render_template('index.html', matches=matches)
-
-    # html_content = fetch_table_data()
-    # table_data = parse_table(html_content)
-    # return render_template('index.html', table_data=table_data)
-
+@app.route('/games')
+def games():
     html_content = fetch_table_data()
     table_data = parse_table(html_content)
     df = convert_to_dataframe(table_data)
-    print(df)
+    df.columns = ['Date', 'Time', 'Location', 'away_team_id', 'home_team_id']
+    # Assuming df is your DataFrame and is already populated with data
+    games_list = df.to_dict(orient='records')
+    for game in games_list:
+        game['game_id'] = f"{game.get('Date', '').replace('-', '')}{game.get('Time', '').replace(':', '')}{game.get('away_team_id', '').replace(' ', '')}{game.get('home_team_id', '').replace(' ', '')}"
+    print(games_list)
+    return render_template('games.html', games=games_list)
+
+
+@app.route('/')
+def home():
+    html_content = fetch_table_data()
+    table_data = parse_table(html_content)
 
     total_votes_game1 = sum(votes['game1'].values())
     total_votes_game2 = sum(votes['game2'].values())

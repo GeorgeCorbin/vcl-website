@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Games Schedule</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Upcoming Games</h1>
+    {% for game in games %}
+    <div class="game">
+        <div class="timer">Game on {{ game['Date'] }} at {{ game['Time'] }}</div>
+        <div class="team" onclick="vote('{{ game['game_id'] }}', '{{ game['away_team_id'] }}', this)">
+            <div class="select-box">
+                <img src="{{ url_for('static', filename='images/' ~ game['away_team_logo']) }}" alt="Away Team Logo">
+            </div>
+            <span>{{ game['Away Team'] }}</span>
+            <div class="vote-percent">N/A</div>
+            <input type="radio" name="game{{ loop.index }}vote" style="display:none">
+        </div>
+        <div class="team" onclick="vote('{{ game['game_id'] }}', '{{ game['home_team_id'] }}', this)">
+            <div class="select-box">
+                <img src="{{ url_for('static', filename='images/' ~ game['home_team_logo']) }}" alt="Home Team Logo">
+            </div>
+            <span>{{ game['Home Team'] }}</span>
+            <div class="vote-percent">N/A</div>
+            <input type="radio" name="game{{ loop.index }}vote" style="display:none">
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- games.html -->
+    <form action="{{ url_for('home') }}">
+        <button type="submit">Back to Home</button>
+    </form>
+
+</body>
+</html>

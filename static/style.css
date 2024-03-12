@@ -36,11 +36,6 @@ body, html {
     padding: 10px;
     border-radius: 5px;
 }
-.mcla-upcoming-games {
-    max-width: 600px; /* or any other styling properties */
-    margin: auto;
-    padding: 20px;
-}
 
 
 .team {
