@@ -4,7 +4,6 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 import pandas as pd
 
-
 PAGE_NUMBER = 5
 
 def fetch_table_data():

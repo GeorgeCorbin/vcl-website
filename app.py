@@ -20,7 +20,7 @@ def games():
     games_list = df.to_dict(orient='records')
     for game in games_list:
         game['game_id'] = f"{game.get('Date', '').replace('-', '')}{game.get('Time', '').replace(':', '')}{game.get('away_team_id', '').replace(' ', '')}{game.get('home_team_id', '').replace(' ', '')}"
-    print(games_list)
+    # print(games_list)
     return render_template('games.html', games=games_list)
 
 

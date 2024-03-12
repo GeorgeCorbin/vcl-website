@@ -29,6 +29,14 @@
     <div class="score-box">Season 0/0</div>
     <div class="score-box">This Week 0/5</div>
   </div>
+
+  <!-- index.html to games.html -->
+  <br>
+  <form action="{{ url_for('games') }}">
+      <button type="submit">View Games</button>
+  </form>
+  <br>
+
 <!-- Some existing content -->
 
 <!--<div id="match-schedule">-->
@@ -112,6 +120,7 @@
   </div>
 
   <!-- index.html -->
+  <br>
   <form action="{{ url_for('games') }}">
       <button type="submit">View Games</button>
   </form>
