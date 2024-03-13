@@ -30,13 +30,17 @@ body, html {
     border-radius: 5px;
 }
 
-.matchup {
+.matchup, .game {
     background-color: #252526;
     margin: 20px;
     padding: 10px;
     border-radius: 5px;
 }
 
+.highlighted {
+    border: 2px solid #4CAF50; /* Example: green border */
+    background-color: #f0f0f0; /* Example: light grey background */
+}
 
 .team {
     display: flex;
