@@ -4,24 +4,6 @@
   <meta charset="utf-8">
   <title>VCL Pick'Em</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <script>
-    function vote(gameId, teamId, element) {
-      fetch('/vote', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ game_id: gameId, team_id: teamId })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if(data.success) {
-          // Refresh the page to update the vote percentages
-          window.location.reload();
-        }
-      });
-    }
-  </script>
 </head>
 <body>
   <div class="header">
@@ -36,88 +18,6 @@
       <button type="submit">View Games</button>
   </form>
   <br>
-
-<!-- Some existing content -->
-
-<!--<div id="match-schedule">-->
-<!--    {% for match in matches %}-->
-<!--        <div class="match">-->
-<!--            <div class="date-time">{{ match.date }} - {{ match.time }}</div>-->
-<!--            <div class="teams">-->
-<!--                <span class="away">{{ match.away }}</span>-->
-<!--                <span>vs</span>-->
-<!--                <span class="home">{{ match.home }}</span>-->
-<!--            </div>-->
-<!--            <div class="score">{{ match.score }}</div>-->
-<!--            <div class="countdown">Time until match: {{ match.hours }} hours and {{ match.minutes }} minutes</div>-->
-<!--        </div>-->
-<!--    {% endfor %}-->
-<!--</div>-->
-<!-- index.html -->
-
-<!--  <div id="games">-->
-<!--        {% for game in games %}-->
-<!--        <div class="game">-->
-<!--            <p>Date: {{ game['Date'] }}</p>-->
-<!--            <p>Time: {{ game['Time'] }}</p>-->
-<!--            <p>Location: {{ game['Location'] }}</p>-->
-<!--            <p>Away Team: {{ game['Away Team'] }}</p>-->
-<!--            <p>Home Team: {{ game['Home Team'] }}</p>-->
-<!--        </div>-->
-<!--        {% endfor %}-->
-<!--    </div>-->
-
-<!--<table>-->
-<!--    {% for row in table_data %}-->
-<!--    <tr>-->
-<!--        {% for cell in row %}-->
-<!--        <td>{{ cell }}</td>-->
-<!--        {% endfor %}-->
-<!--    </tr>-->
-<!--    {% endfor %}-->
-<!--</table>-->
-
-<!-- More existing content -->
-
-  <div class="matchup">
-    <div class="timer">Closes in 18 hrs</div>
-    <div class="team" onclick="vote('game1', 'team1', this)">
-      <div class="select-box">
-        <img src="{{ url_for('static', filename='images/gtlogo.png') }}" alt="Team 1 Logo">
-      </div>
-      <span>Georgia Tech</span>
-      <div class="vote-percent">{{ '%0.1f' | format(game1['team1'] / (total1 if total1 > 0 else 1) * 100) }}%</div>
-      <input type="radio" name="game1vote" style="display:none">
-    </div>
-    <div class="team" onclick="vote('game1', 'team2', this)">
-      <div class="select-box">
-        <img src="{{ url_for('static', filename='images/texaslogo.png') }}" alt="Team 2 Logo">
-      </div>
-      <span>Texas</span>
-      <div class="vote-percent">{{ '%0.1f' | format(game1['team2'] / (total1 if total1 > 0 else 1) * 100) }}%</div>
-      <input type="radio" name="game1vote" style="display:none">
-    </div>
-  </div>
-
-  <div class="matchup">
-    <div class="timer">Closes in 18 hrs</div>
-    <div class="team" onclick="vote('game2', 'team3', this)">
-      <div class="select-box">
-        <img src="{{ url_for('static', filename='images/team3logo.png') }}" alt="Team 3 Logo">
-      </div>
-      <span>Team 3</span>
-      <div class="vote-percent">{{ '%0.1f' | format(game2['team3'] / (total2 if total2 > 0 else 1) * 100) }}%</div>
-      <input type="radio" name="game2vote" style="display:none">
-    </div>
-    <div class="team" onclick="vote('game2', 'team4', this)">
-      <div class="select-box">
-        <img src="{{ url_for('static', filename='images/team4logo.png') }}" alt="Team 4 Logo">
-      </div>
-      <span>Team 4</span>
-      <div class="vote-percent">{{ '%0.1f' | format(game2['team4'] / (total2 if total2 > 0 else 1) * 100) }}%</div>
-      <input type="radio" name="game2vote" style="display:none">
-    </div>
-  </div>
 
   <!-- index.html -->
   <br>

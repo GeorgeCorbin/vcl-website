@@ -4,27 +4,9 @@
     <meta charset="UTF-8">
     <title>Games Schedule</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <script>
-    function vote(gameId, teamId, element) {
-      fetch('/vote', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ game_id: gameId, team_id: teamId })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if(data.success) {
-          // Refresh the page to update the vote percentages
-          window.location.reload();
-        }
-      });
-    }
-  </script>
+    <script src="votingScript.js"></script>
 </head>
 <body>
-    <script src="script.js"></script>
     <h1>Upcoming Games</h1>
     <!-- games.html to index.html -->
     <form action="{{ url_for('home') }}">
@@ -36,22 +18,26 @@
         <div class="timer">Game on {{ game['Date'] }} at {{ game['Time'] }}</div>
         <div class="location">Location: {{ game['Location'] }}</div>
         <div class="score">Score ({{game['away_team_id']}} - {{ game['home_team_id'] }}): {{ game['Score'] }}</div>
-        <div class="team" onclick="vote('{{ game['game_id'] }}', '{{ game['away_team_id'] }}', this)">
+        <div class="team" onclick="vote('{{ game['game_id'] }}', '{{ game['away_team_id'] }}', this);">
             <div class="select-box" onclick="highlightBox(this);">
-                <img src="{{ url_for('static', filename='images/' ~ game['away_team_id'])  + '.png'}}" alt="Away Team Logo">
+<!--                <img src="{{ url_for('static', filename='images/' ~ game['away_team_id'])  + '.png'}}" alt="Away Team Logo">-->
+                <img alt="Away Team Logo">
             </div>
             <span>{{ game['away_team_id'] }}</span>
-            <div class="vote-percent">N/A</div>
+            <div class="vote-percent">{{ '%0.1f' | format(game['away_team_percent']) }}%</div>
             <input type="radio" name="game{{ loop.index }}vote" style="display:none">
         </div>
-        <div class="team" onclick="vote('{{ game['game_id'] }}', '{{ game['home_team_id'] }}', this)">
+        <div class="team" onclick="vote('{{ game['game_id'] }}', '{{ game['home_team_id'] }}', this);">
             <div class="select-box" onclick="highlightBox(this);">
-                <img src="{{ url_for('static', filename='images/' ~ game['home_team_id']) + '.png'}}" alt="Home Team Logo">
+<!--                <img src="{{ url_for('static', filename='images/' ~ game['home_team_id']) + '.png'}}" alt="Home Team Logo">-->
+                <img alt="Home Team Logo">
             </div>
             <span>{{ game['home_team_id'] }}</span>
-            <div class="vote-percent">N/A</div>
+            <div class="vote-percent">{{ '%0.1f' | format(game['home_team_percent']) }}%</div>
+            <!-- Debugging line to print the game dictionary -->
             <input type="radio" name="game{{ loop.index }}vote" style="display:none">
         </div>
+<!--        <script src="script.js"></script>-->
     </div>
     {% endfor %}
 
