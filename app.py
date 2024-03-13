@@ -79,11 +79,7 @@ def calculate_percentage(game_votes, team_id):
 
 @app.route('/')
 def home():
-    # html_content = fetch_table_data()
-    # table_data = parse_table(html_content)
 
-    total_votes_game1 = sum(votes['game1'].values())
-    total_votes_game2 = sum(votes['game2'].values())
     # Pass data to the frontend
     return render_template('index.html')
 
