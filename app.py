@@ -23,15 +23,18 @@ locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 current_month = time.strftime("%m")
 all_dataframes = []
 
-@app.route('/games')
-def games():
-    for page_number in range(1, 10):  # Assuming the pages are numbered from 1 to 9
+def largeDataFrame(total_pages):
+    for page_number in range(1, total_pages + 1):  # Assuming the pages are numbered from 1 to 9
         html_content = fetch_table_data(month=current_month, page_number=page_number)
         table_data = parse_table(html_content)
         new_df = convert_to_dataframe(table_data)
         # print(new_df)
         all_dataframes.append(new_df)
-    df = pd.concat(all_dataframes, ignore_index=True)
+    return pd.concat(all_dataframes, ignore_index=True)
+
+@app.route('/games')
+def games():
+    df = largeDataFrame(5)
 
     # Assuming df is your DataFrame and is already populated with data
     games_list = df.to_dict(orient='records')
@@ -79,7 +82,6 @@ def calculate_percentage(game_votes, team_id):
 
 @app.route('/')
 def home():
-
     # Pass data to the frontend
     return render_template('index.html')
 

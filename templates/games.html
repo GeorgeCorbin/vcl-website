@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Games Schedule</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='/css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/votingScript.js') }}" async></script>
 </head>
 <body>
     <h1>Upcoming Games</h1>
@@ -46,7 +47,7 @@
         <button type="submit">Back to Home</button>
     </form>
 
-    <script src="{{ url_for('static', filename='js/votingScript.js') }}"></script>
+
 
 </body>
 </html>
