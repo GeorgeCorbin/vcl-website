@@ -1,10 +1,10 @@
-function vote(gameId, teamId) {
+function vote(gameId, teamId, opposingTeamId) {
     fetch('/vote', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ game_id: gameId, team_id: teamId })
+        body: JSON.stringify({ game_id: gameId, team_id: teamId, opposing_team_id: opposingTeamId })
     })
     .then(response => {
         if (!response.ok) {

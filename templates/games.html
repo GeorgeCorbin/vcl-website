@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Games Schedule</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='/css/style.css') }}">
-    <script src="{{ url_for('static', filename='js/votingScript.js') }}" async></script>
+    <script src="{{ url_for('static', filename='js/votingScript.js') }}" ></script>
 </head>
 <body>
     <h1>Upcoming Games</h1>
@@ -18,7 +18,7 @@
         <div class="timer">Game on {{ game['Date'] }} at {{ game['Time'] }}</div>
         <div class="location">Location: {{ game['Location'] }}</div>
         <div class="score">Score ({{game['away_team_id']}} - {{ game['home_team_id'] }}): {{ game['Score'] }}</div>
-        <div class="team" onclick="vote('{{ game['game_id'] }}', '{{ game['away_team_id'] }}', this);">
+        <div class="team" onclick="vote('{{ game['game_id'] }}', '{{ game['away_team_id'] }}', '{{ game['home_team_id'] }}', this);">
             <div class="select-box" onclick="highlightBox(this);">
 <!--                <img src="{{ url_for('static', filename='images/' ~ game['away_team_id'])  + '.png'}}" alt="Away Team Logo">-->
                 <img alt="Away Team Logo">
@@ -27,7 +27,7 @@
             <div class="vote-percent">{{ '%0.1f' | format(game['away_team_percent']) }}%</div>
             <input type="radio" name="game{{ loop.index }}vote" style="display:none">
         </div>
-        <div class="team" onclick="vote('{{ game['game_id'] }}', '{{ game['home_team_id'] }}', this);">
+        <div class="team" onclick="vote('{{ game['game_id'] }}', '{{ game['home_team_id'] }}', '{{ game['away_team_id'] }}', this);">
             <div class="select-box" onclick="highlightBox(this);">
 <!--                <img src="{{ url_for('static', filename='images/' ~ game['home_team_id']) + '.png'}}" alt="Home Team Logo">-->
                 <img alt="Home Team Logo">
