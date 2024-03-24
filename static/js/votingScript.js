@@ -15,7 +15,8 @@ function vote(gameId, teamId, opposingTeamId) {
     .then(data => {
         if(data.success) {
             // Handle success response
-            refreshPage()
+//            console.info()
+//            refreshPage()
         } else {
             // Handle failure response
             console.error("Vote failed:", data.message);

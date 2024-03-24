@@ -34,16 +34,20 @@ def largeDataFrame(total_pages):
         all_dataframes.append(new_df)
     return pd.concat(all_dataframes, ignore_index=True)
 
+# @app.route('/games_content')
+# def games_content():
+#     return render_template('games_content.html')
 
 @app.route('/games')
 def games():
-    df = largeDataFrame(5)
-
+    df = largeDataFrame(7)
+    # print(df)
     # Assuming df is your DataFrame and is already populated with data
     games_list = df.to_dict(orient='records')
-    filtered_games = []
+    filtered_games_weekOnly = []
     current_date = datetime.now()
     updated_games_list = []
+    # print(games_list)
 
     for game in games_list:
         game[
@@ -51,11 +55,11 @@ def games():
         # Concatenate the current year with the game's date string
         game_date_str = str(current_date.year) + ' ' + game['Date']
         game_date = datetime.strptime(game_date_str, '%Y %a %b %d')
-
+        # print(game)
         # Calculate the difference in days and filter games within the next 7 days
         delta_days = (game_date - current_date).days
         if 0 <= delta_days <= 7:
-            filtered_games.append(game)
+            filtered_games_weekOnly.append(game)
 
         game_id = game['game_id']
         game_votes = votes.get(game_id,
@@ -65,9 +69,11 @@ def games():
         game['home_team_percent'] = calculate_percentage(game_votes, game['home_team_id'])
 
         updated_games_list.append(game)
-
-    return render_template('games_content.html',
-                           games=filtered_games)
+    # print("huh")
+    # print(filtered_games_weekOnly)
+    # print(updated_games_list)
+    return render_template('games.html',
+                           games=filtered_games_weekOnly)
 
 
 def calculate_percentage(game_votes, team_id):
@@ -76,11 +82,6 @@ def calculate_percentage(game_votes, team_id):
     team_votes = game_votes.get(team_id, 0)
 
     return (team_votes / total_votes * 100) if total_votes > 0 else 0
-
-# @app.route('/games')
-# def games_content():
-#     return render_template('games_content.html')
-
 
 @app.route('/')
 def home():
@@ -117,24 +118,6 @@ def vote():
         # print(f"FAILED: Missing team_id in votes[game_id]: {team_id}, votes: {votes[game_id]}")
         return jsonify(success=False, message="Invalid team ID"), 400
     return jsonify(success=True, votes=votes[game_id])
-
-    # print(f"Received vote for game_id: {game_id}, team_id: {team_id}")
-    # vote_percentage = copy.deepcopy(votes)
-    # print(f"Updated votes: {votes}")
-    # for game_id, vote_counts in votes.items():
-    #     # Assuming vote_counts is structured like: {'team1_id': vote_count, 'team2_id': vote_count}
-    #     print(vote_counts.items())
-    #
-    #     # Calculate the percentages
-    #     for team_id, count in vote_counts.items():
-    #         percentage = calculate_percentage(vote_counts, team_id)
-    #         print(f"Game ID: {game_id}, Team ID: {team_id}, Vote Percentage: {percentage}")
-    #
-    #         # Update the dictionary or handle the calculated percentage as needed
-    #         # For example, if you want to store the percentages back in votes:
-    #         vote_percentage[game_id][f"{team_id}"] = percentage
-    #         print(vote_counts.items())
-    #         print(vote_percentage)
 
 if __name__ == '__main__':
     app.run(debug=True)
