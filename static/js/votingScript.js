@@ -18,6 +18,9 @@ function vote(gameId, homeId, awayId, theVote) {
     })
     .then(data => {
         if(data.success) {
+            // Add the 'selected' class to the clicked element
+//            element.classList.add('selected');
+
             let awayPercentRounded = Number(data.away_team_percent.toFixed(1));
             let homePercentRounded = Number(data.home_team_percent.toFixed(1));
 
@@ -29,6 +32,16 @@ function vote(gameId, homeId, awayId, theVote) {
         }
     })
     .catch(error => console.error('There has been a problem with your fetch operation:', error));
+}
+
+function highlightBox(element) {
+  // Remove the 'selected' class from any previously clicked select-box elements
+  document.querySelectorAll('.select-box.selected').forEach((box) => {
+    box.classList.remove('selected');
+  });
+
+  // Add the 'selected' class to the clicked element
+  element.classList.add('selected');
 }
 
 
