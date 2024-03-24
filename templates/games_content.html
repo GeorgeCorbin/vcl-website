@@ -7,27 +7,20 @@
              Load Page
     </button>
 </div>
-{% for game in games %}
-    <!-- Static content for debugging -->
-    <div>
-        <script>console.log("Flash message: Games_Content New Division Loop");</script>
-    </div>
-{% endfor %}
 <script>console.log("Flash message: Games_Content Before Main Loop");</script>
 {% if games %}
     {% for game in games %}
-        <script>console.log("Flash message: Games_Content Main Loop Loaded");</script>
+<!--        <script>console.log("Flash message: Games_Content Main Loop Loaded");</script>-->
         <div class="game">
-            <script>console.log("Flash message: Games_Content game Class Loaded");</script>
-
+<!--            <script>console.log("Flash message: Games_Content game Class Loaded");</script>-->
             <button onclick="refreshPage()">
                  Load Section
             </button>
             <div class="timer">Game on {{ game['Date'] }} at {{ game['Time'] }}</div>
             <div class="location">Location: {{ game['Location'] }}</div>
             <div class="score">Score ({{game['away_team_id']}} - {{ game['home_team_id'] }}): {{ game['Score'] }}</div>
-            <div class="team" onclick="vote('{{ game['game_id'] }}', '{{ game['away_team_id'] }}', '{{ game['home_team_id'] }}', this);">
-                <div class="select-box" onclick="highlightBox(this);">
+            <div class="team" onclick='vote({{ game["game_id"] | tojson | safe }}, {{ game["away_team_id"] | tojson | safe }}, {{ game["home_team_id"] | tojson | safe }});'>
+                <div class="select-box">
     <!--                <img src="{{ url_for('static', filename='images/' ~ game['away_team_id'])  + '.png'}}" alt="Away Team Logo">-->
                     <img alt="Away Team Logo">
                 </div>
@@ -35,8 +28,8 @@
                 <div class="vote-percent">{{ '%0.1f' | format(game['away_team_percent']) }}%</div>
                 <input type="radio" name="game{{ loop.index }}vote" style="display:none">
             </div>
-            <div class="team" onclick="vote('{{ game['game_id'] }}', '{{ game['home_team_id'] }}', '{{ game['away_team_id'] }}', this);">
-                <div class="select-box" onclick="highlightBox(this);">
+            <div class="team" onclick='vote({{ game["game_id"] | tojson | safe }}, {{ game["home_team_id"] | tojson | safe }}, {{ game["away_team_id"] | tojson | safe }});'>
+                <div class="select-box">
     <!--                <img src="{{ url_for('static', filename='images/' ~ game['home_team_id']) + '.png'}}" alt="Home Team Logo">-->
                     <img alt="Home Team Logo">
                 </div>
