@@ -1,6 +1,8 @@
 function vote(gameId, homeId, awayId, theVote) {
     // Replace spaces with underscores to match the HTML IDs
-    const safeGameId = gameId.replace(/\s+/g, '_');
+    const newGameId = gameId.replace(/\s+/g, '_');
+    const safeGameId = newGameId.replace('&', '\\&');
+
 
     fetch('/vote', {
         method: 'POST',

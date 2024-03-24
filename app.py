@@ -121,15 +121,15 @@ def vote():
 
     # Recalculate percentages after vote
     game_votes = votes[game_id]
-    print(votes[game_id])
+    # print(votes[game_id])
     # print("homeId", game_votes[homeId])
     # print("o_t_i", game_votes[awayId])
-    print("away ID: ", awayId)
-    print("home ID: ", homeId)
+    # print("away ID: ", awayId)
+    # print("home ID: ", homeId)
     away_team_percent = calculate_percentage(game_votes, awayId)
-    print("awway_percent", away_team_percent)
+    # print("awway_percent", away_team_percent)
     home_team_percent = calculate_percentage(game_votes, homeId)
-    print("home_percent", home_team_percent)
+    # print("home_percent", home_team_percent)
 
 
     # return jsonify(success=True, votes=votes[game_id])
