@@ -9,12 +9,6 @@ from scraper import *
 
 app = Flask(__name__)
 
-# Dummy data for votes
-# votes = {
-#     'game1': {'team1': 0, 'team2': 0},
-#     'game2': {'team3': 0, 'team4': 0}
-# }
-
 votes = {}
 vote_percentages = {}
 
@@ -30,24 +24,19 @@ def largeDataFrame(total_pages):
         html_content = fetch_table_data(month=current_month, page_number=page_number)
         table_data = parse_table(html_content)
         new_df = convert_to_dataframe(table_data)
-        # print(new_df)
+
         all_dataframes.append(new_df)
     return pd.concat(all_dataframes, ignore_index=True)
-
-# @app.route('/games_content')
-# def games_content():
-#     return render_template('games_content.html')
 
 @app.route('/games')
 def games():
     df = largeDataFrame(7)
-    # print(df)
+
     # Assuming df is your DataFrame and is already populated with data
     games_list = df.to_dict(orient='records')
     filtered_games_weekOnly = []
     current_date = datetime.now()
     updated_games_list = []
-    # print(games_list)
 
     for game in games_list:
         game[
@@ -56,7 +45,7 @@ def games():
         game_date_str = str(current_date.year) + ' ' + game['Date']
         game_date = datetime.strptime(game_date_str, '%Y %a %b %d')
         game['game_id'] = game['game_id'].replace(' ', '_')     # Update game_id to be simple
-        # print(game)
+
         # Calculate the difference in days and filter games within the next 7 days
         delta_days = (game_date - current_date).days
         if 0 <= delta_days <= 7:
@@ -70,9 +59,6 @@ def games():
         game['home_team_percent'] = calculate_percentage(game_votes, game['home_team_id'])
 
         updated_games_list.append(game)
-    # print("huh")
-    # print(filtered_games_weekOnly)
-    # print(updated_games_list)
     return render_template('games.html',
                            games=filtered_games_weekOnly)
 
@@ -98,7 +84,6 @@ def vote():
     homeId = data.get('homeId')
     awayId = data.get('awayId')
     theVote = data.get('theVote')
-    # print(awayId)
 
     # Ensure game_id and homeId are present
     if not game_id or not homeId:
@@ -114,25 +99,15 @@ def vote():
     # Increment the vote count for the selected team
     if theVote in votes[game_id]:
         votes[game_id][theVote] += 1
-        # print(votes[game_id][homeId])
     else:
         # print(f"FAILED: Missing homeId in votes[game_id]: {homeId}, votes: {votes[game_id]}")
         return jsonify(success=False, message="Invalid team ID"), 400
 
     # Recalculate percentages after vote
     game_votes = votes[game_id]
-    # print(votes[game_id])
-    # print("homeId", game_votes[homeId])
-    # print("o_t_i", game_votes[awayId])
-    # print("away ID: ", awayId)
-    # print("home ID: ", homeId)
     away_team_percent = calculate_percentage(game_votes, awayId)
-    # print("awway_percent", away_team_percent)
     home_team_percent = calculate_percentage(game_votes, homeId)
-    # print("home_percent", home_team_percent)
 
-
-    # return jsonify(success=True, votes=votes[game_id])
     return jsonify(success=True, votes=votes[game_id], away_team_percent=away_team_percent, home_team_percent=home_team_percent)
 
 

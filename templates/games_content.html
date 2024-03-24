@@ -1,19 +1,14 @@
-<div class="debug">
-    <script>console.log("Flash message: Games_Content Debug Loaded");</script>
-    <button onclick="console.log('Testing Reach');">
-             Debug Message
-    </button>
-    <button onclick="reloadPage()">Load Page</button>
-</div>
-<script>console.log("Flash message: Games_Content Before Main Loop");</script>
+<!--<div class="debug">-->
+<!--    <script>console.log("Flash message: Games_Content Debug Loaded");</script>-->
+<!--    <button onclick="console.log('Testing Reach');">-->
+<!--             Debug Message-->
+<!--    </button>-->
+<!--    <button onclick="reloadPage()">Load Page</button>-->
+<!--</div>-->
+<!--<script>console.log("Flash message: Games_Content Before Main Loop");</script>-->
 {% if games %}
     {% for game in games %}
-<!--        <script>console.log("Flash message: Games_Content Main Loop Loaded");</script>-->
         <div class="game">
-<!--            <script>console.log("Flash message: Games_Content game Class Loaded");</script>-->
-<!--            <button onclick="refreshPage()">-->
-<!--                 Load Section-->
-<!--            </button>-->
             <div class="timer">Game on {{ game['Date'] }} at {{ game['Time'] }}</div>
             <div class="location">Location: {{ game['Location'] }}</div>
             <div class="score">Score ({{game['away_team_id']}} - {{ game['home_team_id'] }}): {{ game['Score'] }}</div>
@@ -33,7 +28,6 @@
                 </div>
                 <span>{{ game['home_team_id'] }}</span>
                 <div id="homePercent-{{ game['game_id'].replace(' ', '_') }}" class="vote-percent">{{ '%0.1f' | format(game['home_team_percent']) }}%</div>
-                <!-- Debugging line to print the game dictionary -->
                 <input type="radio" name="game{{ loop.index }}vote" style="display:none">
             </div>
         </div>
