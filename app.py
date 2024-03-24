@@ -1,7 +1,7 @@
 import copy
 import time
 
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, make_response
 from datetime import datetime, timedelta
 import locale
 
@@ -96,6 +96,10 @@ def vote():
         votes[game_id] = {homeId: 0, awayId: 0}
         # print(f"Initialize game_id in votes: {game_id}, votes: {votes}")
 
+    # Check if the user has already voted
+    if request.cookies.get(f'voted_{game_id}'):
+        return jsonify(success=False, message="You have already voted."), 403
+
     # Increment the vote count for the selected team
     if theVote in votes[game_id]:
         votes[game_id][theVote] += 1
@@ -105,10 +109,15 @@ def vote():
 
     # Recalculate percentages after vote
     game_votes = votes[game_id]
+    # print(game_votes)
     away_team_percent = calculate_percentage(game_votes, awayId)
     home_team_percent = calculate_percentage(game_votes, homeId)
 
-    return jsonify(success=True, votes=votes[game_id], away_team_percent=away_team_percent, home_team_percent=home_team_percent)
+    # Set a cookie indicating that this user has voted
+    resp = make_response(jsonify(success=True, votes=votes[game_id], away_team_percent=away_team_percent, home_team_percent=home_team_percent))
+    resp.set_cookie(f'voted_{game_id}', 'true', max_age=30 * 24 * 60 * 60)  # Expires in 30 days
+    return resp
+    # return jsonify(success=True, votes=votes[game_id], away_team_percent=away_team_percent, home_team_percent=home_team_percent)
 
 
 if __name__ == '__main__':
