@@ -97,6 +97,7 @@ def vote():
     game_id = data.get('game_id')
     homeId = data.get('homeId')
     awayId = data.get('awayId')
+    theVote = data.get('theVote')
     # print(awayId)
 
     # Ensure game_id and homeId are present
@@ -111,8 +112,8 @@ def vote():
         # print(f"Initialize game_id in votes: {game_id}, votes: {votes}")
 
     # Increment the vote count for the selected team
-    if homeId in votes[game_id]:
-        votes[game_id][homeId] += 1
+    if theVote in votes[game_id]:
+        votes[game_id][theVote] += 1
         # print(votes[game_id][homeId])
     else:
         # print(f"FAILED: Missing homeId in votes[game_id]: {homeId}, votes: {votes[game_id]}")
@@ -120,9 +121,11 @@ def vote():
 
     # Recalculate percentages after vote
     game_votes = votes[game_id]
-    # print(votes[game_id])
+    print(votes[game_id])
     # print("homeId", game_votes[homeId])
     # print("o_t_i", game_votes[awayId])
+    print("away ID: ", awayId)
+    print("home ID: ", homeId)
     away_team_percent = calculate_percentage(game_votes, awayId)
     print("awway_percent", away_team_percent)
     home_team_percent = calculate_percentage(game_votes, homeId)
