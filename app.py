@@ -95,37 +95,37 @@ def vote():
     # print(f"Incoming data: {data}")  # Debug print
 
     game_id = data.get('game_id')
-    team_id = data.get('team_id')
-    opposing_team_id = data.get('opposing_team_id')
-    # print(opposing_team_id)
+    homeId = data.get('homeId')
+    awayId = data.get('awayId')
+    # print(awayId)
 
-    # Ensure game_id and team_id are present
-    if not game_id or not team_id:
-        # print(f"Missing game_id or team_id. game_id: {game_id}, team_id: {team_id}")
+    # Ensure game_id and homeId are present
+    if not game_id or not homeId:
+        # print(f"Missing game_id or homeId. game_id: {game_id}, homeId: {homeId}")
         return jsonify(success=False, message="Missing data"), 400
 
     # Initialize the game in votes if it doesn't exist
     if game_id not in votes:
         # print(f"Missing game_id from votes: {game_id}, votes: {votes}")
-        votes[game_id] = {team_id: 0, opposing_team_id: 0}
+        votes[game_id] = {homeId: 0, awayId: 0}
         # print(f"Initialize game_id in votes: {game_id}, votes: {votes}")
 
     # Increment the vote count for the selected team
-    if team_id in votes[game_id]:
-        votes[game_id][team_id] += 1
-        # print(votes[game_id][team_id])
+    if homeId in votes[game_id]:
+        votes[game_id][homeId] += 1
+        # print(votes[game_id][homeId])
     else:
-        # print(f"FAILED: Missing team_id in votes[game_id]: {team_id}, votes: {votes[game_id]}")
+        # print(f"FAILED: Missing homeId in votes[game_id]: {homeId}, votes: {votes[game_id]}")
         return jsonify(success=False, message="Invalid team ID"), 400
 
     # Recalculate percentages after vote
     game_votes = votes[game_id]
     # print(votes[game_id])
-    # print("team_id", game_votes[team_id])
-    # print("o_t_i", game_votes[opposing_team_id])
-    away_team_percent = calculate_percentage(game_votes, opposing_team_id)
+    # print("homeId", game_votes[homeId])
+    # print("o_t_i", game_votes[awayId])
+    away_team_percent = calculate_percentage(game_votes, awayId)
     print("awway_percent", away_team_percent)
-    home_team_percent = calculate_percentage(game_votes, team_id)
+    home_team_percent = calculate_percentage(game_votes, homeId)
     print("home_percent", home_team_percent)
 
 

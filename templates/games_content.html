@@ -17,7 +17,7 @@
             <div class="timer">Game on {{ game['Date'] }} at {{ game['Time'] }}</div>
             <div class="location">Location: {{ game['Location'] }}</div>
             <div class="score">Score ({{game['away_team_id']}} - {{ game['home_team_id'] }}): {{ game['Score'] }}</div>
-            <div class="team" onclick='vote({{ game["game_id"] | tojson | safe }}, {{ game["away_team_id"] | tojson | safe }}, {{ game["home_team_id"] | tojson | safe }});'>
+            <div class="team" onclick='vote({{ game["game_id"] | tojson | safe }}, {{ game["home_team_id"] | tojson | safe }}, {{ game["away_team_id"] | tojson | safe }});'>
                 <div class="select-box">
     <!--                <img src="{{ url_for('static', filename='images/' ~ game['away_team_id'])  + '.png'}}" alt="Away Team Logo">-->
                     <img alt="Away Team Logo">

@@ -1,4 +1,4 @@
-function vote(gameId, teamId, opposingTeamId) {
+function vote(gameId, homeId, awayId) {
     // Replace spaces with underscores to match the HTML IDs
     const safeGameId = gameId.replace(/\s+/g, '_');
 
@@ -7,7 +7,7 @@ function vote(gameId, teamId, opposingTeamId) {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ game_id: gameId, team_id: teamId, opposing_team_id: opposingTeamId })
+        body: JSON.stringify({ game_id: gameId, homeId: homeId, awayId: awayId })
     })
     .then(response => {
         if (!response.ok) {
