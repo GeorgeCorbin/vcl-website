@@ -98,3 +98,9 @@ body, html {
 .score {
     margin-right: 10px;
 }
+
+.block-center {
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%; /* or any specific width */
+}
