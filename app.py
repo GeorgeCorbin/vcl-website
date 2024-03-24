@@ -55,6 +55,7 @@ def games():
         # Concatenate the current year with the game's date string
         game_date_str = str(current_date.year) + ' ' + game['Date']
         game_date = datetime.strptime(game_date_str, '%Y %a %b %d')
+        game['game_id'] = game['game_id'].replace(' ', '_')     # Update game_id to be simple
         # print(game)
         # Calculate the difference in days and filter games within the next 7 days
         delta_days = (game_date - current_date).days
@@ -74,7 +75,6 @@ def games():
     # print(updated_games_list)
     return render_template('games.html',
                            games=filtered_games_weekOnly)
-
 
 def calculate_percentage(game_votes, team_id):
     # Assuming game_votes is a dictionary with team votes
@@ -117,7 +117,21 @@ def vote():
     else:
         # print(f"FAILED: Missing team_id in votes[game_id]: {team_id}, votes: {votes[game_id]}")
         return jsonify(success=False, message="Invalid team ID"), 400
-    return jsonify(success=True, votes=votes[game_id])
+
+    # Recalculate percentages after vote
+    game_votes = votes[game_id]
+    # print(votes[game_id])
+    # print("team_id", game_votes[team_id])
+    # print("o_t_i", game_votes[opposing_team_id])
+    away_team_percent = calculate_percentage(game_votes, opposing_team_id)
+    print("awway_percent", away_team_percent)
+    home_team_percent = calculate_percentage(game_votes, team_id)
+    print("home_percent", home_team_percent)
+
+
+    # return jsonify(success=True, votes=votes[game_id])
+    return jsonify(success=True, votes=votes[game_id], away_team_percent=away_team_percent, home_team_percent=home_team_percent)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
