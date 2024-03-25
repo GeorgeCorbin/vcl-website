@@ -1,39 +1,16 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>VCL Pick'Em</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='/css/style.css') }}">
+    <meta charset="utf-8">
+    <title>VCL Pick'Em</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='/css/style.css') }}">
 </head>
 <body>
-  <div class="header">
-    <div class="logo">VCL</div>
-<!--    <div class="score-box">Season 0/0</div>-->
-<!--    <div class="score-box">This Week 0/5</div>-->
-  </div>
-
-  <!-- index.html to games.html -->
-  <br>
-  <form action="{{ url_for('games') }}">
-      <button type="submit">View Games</button>
-  </form>
-  <br>
-
-  <main class="block-center">
-<!--    <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/p/XXXXXXXXX/" data-instgrm-version="13">-->
-<!--      &lt;!&ndash; Instagram embed content &ndash;&gt;-->
-<!--    </blockquote>-->
-<!--    <script async src="//www.instagram.com/embed.js"></script>-->
+{% include 'selectionBar.html' %}
+<br>
+<main class="block-center">
     {% include 'instagramPosts.html' %}
-
-  </main>
-
-  <!-- index.html -->
-  <br>
-  <form action="{{ url_for('games') }}">
-      <button type="submit">View Games</button>
-  </form>
-
+</main>
 
 </body>
 </html>

@@ -9,21 +9,18 @@
 <!--    <script>onLoad();</script>-->
 </head>
 <body>
+{% include 'selectionBar.html' %}
 <!--    <h1>Upcoming Games</h1>-->
     <div class="header">
-        <div class="logo">Upcoming Games</div>
+<!--        <img src="/static/images/vcl.png" alt="VCL Logo" class="logo">-->
+        <div class="title">MCLA Pick'Em</div>
 <!--    <div class="score-box">Season 0/0</div>-->
-    <div class="score-box">This Week 0/{{ games|length }}</div>
+        <div class="score-box">This Week 0/{{ games|length }}</div>
     </div>
     <br>
 
-    <!-- games.html to index.html -->
-    <form action="{{ url_for('home') }}">
-        <button type="submit">Back to Home</button>
-    </form>
-    <br>
     {% if games %}
-      <p>Games available: {{ games|length }}</p>
+<!--      <p>Games available: {{ games|length }}</p>-->
     {% else %}
       <p>No games to display. (Games.html)</p>
     {% endif %}
@@ -31,10 +28,5 @@
     <main>
         {% include 'games_content.html' %}
     </main>
-    <br>
-    <form action="{{ url_for('home') }}">
-        <button type="submit">Back to Home</button>
-    </form>
-
 </body>
 </html>

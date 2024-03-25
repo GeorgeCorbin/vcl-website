@@ -45,7 +45,7 @@ def games():
         # Concatenate the current year with the game's date string
         game_date_str = str(current_date.year) + ' ' + game['Date']
         game_date = datetime.strptime(game_date_str, '%Y %a %b %d')
-        # # Calculate the difference in days and filter games within the next 7 days
+        # Calculate the difference in days and filter games within the next 7 days
         delta_days = (game_date - current_date).days
         # Weekday numbers in Python: Monday is 0, Tuesday is 1, ..., Sunday is 6.
         # Last Wednesday = -7 and this Wednesday = 2

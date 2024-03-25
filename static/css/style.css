@@ -11,6 +11,37 @@ body, html {
     font-family: Arial, sans-serif;
 }
 
+/* Style for the top selection bar */
+.top-selection-bar ul {
+    list-style-type: none; /* Remove default list styling */
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333; /* Dark background color */
+     /* position: fixed; Make it stick to the top and follow scroll */
+    top: 0;
+    width: 100%;
+    z-index: 1000; /* Ensure it's above other content */
+}
+
+.top-selection-bar li {
+    float: left; /* Align items horizontally */
+}
+
+.top-selection-bar li a {
+    display: block; /* Make links fill the li element */
+    color: white; /* Text color */
+    text-align: center; /* Center text */
+    padding: 14px 16px; /* Spacing around text */
+    text-decoration: none; /* Remove underline */
+}
+
+/* Change the link color when hovered over */
+.top-selection-bar li a:hover {
+    background-color: #ddd; /* Light background for hover */
+    color: black; /* Dark text for hover */
+}
+
 .header {
     background-color: #1e1e1e;
     padding: 10px;
@@ -19,9 +50,20 @@ body, html {
     justify-content: space-between;
 }
 
+.title {
+    font-size: 1.5em;
+    font-weight: bold;
+    text-align: center; /* Center text */
+    float: center; /* Align logo to the left */
+    padding: 2px 15px; /* Add some padding to align it vertically within the nav bar */
+}
+
 .logo {
     font-size: 1.5em;
     font-weight: bold;
+    height: 30px; /* Adjust based on your logo's size and nav bar height */
+    float: left; /* Align logo to the left */
+    padding: 2px 15px; /* Add some padding to align it vertically within the nav bar */
 }
 
 .score-box {
