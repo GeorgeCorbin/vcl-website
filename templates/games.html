@@ -9,7 +9,14 @@
 <!--    <script>onLoad();</script>-->
 </head>
 <body>
-    <h1>Upcoming Games</h1>
+<!--    <h1>Upcoming Games</h1>-->
+    <div class="header">
+        <div class="logo">Upcoming Games</div>
+<!--    <div class="score-box">Season 0/0</div>-->
+    <div class="score-box">This Week 0/{{ games|length }}</div>
+    </div>
+    <br>
+
     <!-- games.html to index.html -->
     <form action="{{ url_for('home') }}">
         <button type="submit">Back to Home</button>

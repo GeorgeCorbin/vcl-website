@@ -34,14 +34,55 @@ function vote(gameId, homeId, awayId, theVote) {
     .catch(error => console.error('There has been a problem with your fetch operation:', error));
 }
 
-function highlightBox(element) {
-  // Remove the 'selected' class from any previously clicked select-box elements
-  document.querySelectorAll('.select-box.selected').forEach((box) => {
+//function highlightBox(element) {
+//  // Remove the 'selected' class from any previously clicked select-box elements
+//  document.querySelectorAll('.select-box.selected').forEach((box) => {
+//    box.classList.remove('selected');
+//  });
+//
+//  // Add the 'selected' class to the clicked element
+//  element.classList.add('selected');
+//}
+function highlightBox(selectedElement, gameId, team) {
+  // Query all boxes within the same game
+  const gameBoxes = document.querySelectorAll(`.select-box[data-game-id='${gameId}']`);
+
+  // Remove 'selected' class from all boxes within the same game
+  gameBoxes.forEach(box => {
     box.classList.remove('selected');
   });
 
   // Add the 'selected' class to the clicked element
-  element.classList.add('selected');
+  selectedElement.classList.add('selected');
+
+  // Save the selected state to localStorage
+  localStorage.setItem(`selected-${gameId}`, team);
+
+  document.addEventListener('DOMContentLoaded', () => {
+  // Query all select-box elements
+  const selectBoxes = document.querySelectorAll('.select-box');
+  selectBoxes.forEach(box => {
+    const gameId = box.dataset.gameId;
+    const votedTeam = localStorage.getItem(`selected-${gameId}`);
+    if (votedTeam && box.dataset.team === votedTeam) {
+      box.classList.add('selected');
+    }
+  });
+});
 }
+
+// Restore selections when the page loads
+//document.addEventListener('DOMContentLoaded', () => {
+//  const games = document.querySelectorAll('.select-box[data-game-id]');
+//  games.forEach(box => {
+//    const gameId = box.dataset.gameId;
+//    const selectedTeam = localStorage.getItem(`selected-${gameId}`);
+//
+//    // Check if the current box corresponds to the selected team
+//    if (box.dataset.team === selectedTeam) {
+//      box.classList.add('selected');
+//    }
+//  });
+//});
 
 

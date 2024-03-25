@@ -8,9 +8,10 @@
         <div class="game">
             <div class="timer">Game on {{ game['Date'] }} at {{ game['Time'] }}</div>
             <div class="location">Location: {{ game['Location'] }}</div>
-            <div class="score">Score ({{game['away_team_id']}} - {{ game['home_team_id'] }}): {{ game['Score'] }}</div><br>
-            <div class="team" onclick='highlightBox(this); vote({{ game["game_id"] | tojson | safe }}, {{ game["home_team_id"] | tojson | safe }}, {{ game["away_team_id"] | tojson | safe }}, {{ game["away_team_id"] | tojson | safe }});'>
-                <div class="select-box" onclick='highlightSelectedBox("away_team_id");'>
+<!--            <div class="score">Score ({{game['away_team_id']}} - {{ game['home_team_id'] }}): {{ game['Score'] }}</div><br>-->
+            <div class="team" data-game-id="{{ game_id }}" data-team="away_team_id"
+                 onclick='highlightBox(this, "{{ gameId }}", "away_team_id"); vote({{ game["game_id"] | tojson | safe }}, {{ game["home_team_id"] | tojson | safe }}, {{ game["away_team_id"] | tojson | safe }}, {{ game["away_team_id"] | tojson | safe }});'>
+            <div class="select-box" onclick='highlightSelectedBox("away_team_id");'>
     <!--                <img src="{{ url_for('static', filename='images/' ~ game['away_team_id'])  + '.png'}}" alt="Away Team Logo">-->
                     <img alt="Away Team Logo">
                 </div>
@@ -18,8 +19,9 @@
                 <div id="awayPercent-{{ game['game_id'].replace(' ', '_') }}" class="vote-percent">{{ '%0.1f' | format(game['away_team_percent']) }}%</div>
                 <input type="radio" name="game{{ loop.index }}vote" style="display:none">
             </div>
-            <div class="team" onclick='highlightBox(this); vote({{ game["game_id"] | tojson | safe }}, {{ game["home_team_id"] | tojson | safe }}, {{ game["away_team_id"] | tojson | safe }}, {{ game["home_team_id"] | tojson | safe }});'>
-                <div class="select-box">
+            <div class="team" data-game-id="{{ gameId }}" data-team="home_team_id"
+                 onclick='highlightBox(this, "{{ gameId }}", "home_team_id"); vote({{ game["game_id"] | tojson | safe }}, {{ game["home_team_id"] | tojson | safe }}, {{ game["away_team_id"] | tojson | safe }}, {{ game["home_team_id"] | tojson | safe }});'>
+            <div class="select-box">
     <!--                <img src="{{ url_for('static', filename='images/' ~ game['home_team_id']) + '.png'}}" alt="Home Team Logo">-->
                     <img alt="Home Team Logo">
                 </div>
