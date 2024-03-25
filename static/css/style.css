@@ -107,7 +107,7 @@ body, html {
 }
 
 .team.selected {
-    border-color: #add8e6; /* Highlight the selected team */
+    border-color: #add8e6; /* Highlight the selected team. Border around box*/
 }
 
 .team-logo {
