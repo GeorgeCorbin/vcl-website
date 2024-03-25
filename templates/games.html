@@ -2,27 +2,26 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Games Schedule</title>
+    <title>MCLA Pick'Em</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='/css/style.css') }}">
     <script src="{{ url_for('static', filename='js/votingScript.js') }}" ></script>
     <script>console.log("Flash message: Games Loaded");</script>
-<!--    <script>onLoad();</script>-->
 </head>
 <body>
 {% include 'selectionBar.html' %}
-<!--    <h1>Upcoming Games</h1>-->
     <div class="header">
 <!--        <img src="/static/images/vcl.png" alt="VCL Logo" class="logo">-->
-        <div class="title">MCLA Pick'Em</div>
+        <div class="header-text">MCLA Pick'Em</div>
+        <div class="spacer"></div> <!-- This will push the score-box to the right -->
 <!--    <div class="score-box">Season 0/0</div>-->
         <div class="score-box">This Week 0/{{ games|length }}</div>
     </div>
     <br>
 
     {% if games %}
-<!--      <p>Games available: {{ games|length }}</p>-->
+        <script>console.log("Flash message: We Have Games to Display");</script>
     {% else %}
-      <p>No games to display. (Games.html)</p>
+        <script>console.log("Flash message: No Games to Display");</script>
     {% endif %}
 
     <main>

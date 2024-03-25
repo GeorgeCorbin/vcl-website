@@ -47,15 +47,45 @@ body, html {
     padding: 10px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
+    /*
+    */
 }
 
-.title {
+.header-text {
     font-size: 1.5em;
     font-weight: bold;
     text-align: center; /* Center text */
-    float: center; /* Align logo to the left */
+    /*float: 1; /* Allows the title to grow and occupy the available space */
     padding: 2px 15px; /* Add some padding to align it vertically within the nav bar */
+    /*
+    margin: auto;
+    align-items: center;
+    width: 50%;
+    display: flex;
+    justify-content: right
+    align-self: center;
+    */
+    position: absolute; /* Positioning it absolutely to stay centered */
+    left: 50%;
+    transform: translateX(-50%); /* Adjust horizontally to truly center */
+}
+
+.spacer {
+    flex-grow: 1; /* Takes up all available space */
+}
+
+.score-box {
+    background-color: #333;
+    padding: 5px 10px;
+    border-radius: 5px;
+    margin: auto;
+    /*
+    margin-left: auto;
+    margin-right: 0;
+    display: flex;
+    align-self: right;
+    */
 }
 
 .logo {
@@ -64,12 +94,6 @@ body, html {
     height: 30px; /* Adjust based on your logo's size and nav bar height */
     float: left; /* Align logo to the left */
     padding: 2px 15px; /* Add some padding to align it vertically within the nav bar */
-}
-
-.score-box {
-    background-color: #333;
-    padding: 5px 10px;
-    border-radius: 5px;
 }
 
 .matchup, .game {
