@@ -19,6 +19,7 @@ current_month = time.strftime("%m")
 all_dataframes = []
 
 def largeDataFrame(total_pages):
+    all_dataframes.clear()  # Clear the list before appending new data frames.
     for page_number in range(1, total_pages + 1):  # Assuming the pages are numbered from 1 to 9
         html_content = fetch_table_data(month=current_month, page_number=page_number)
         table_data = parse_table(html_content)
