@@ -48,24 +48,13 @@ body, html {
     display: flex;
     align-items: center;
     justify-content: center;
-    /*
-    */
 }
 
 .header-text {
     font-size: 1.5em;
     font-weight: bold;
     text-align: center; /* Center text */
-    /*float: 1; /* Allows the title to grow and occupy the available space */
     padding: 2px 15px; /* Add some padding to align it vertically within the nav bar */
-    /*
-    margin: auto;
-    align-items: center;
-    width: 50%;
-    display: flex;
-    justify-content: right
-    align-self: center;
-    */
     position: absolute; /* Positioning it absolutely to stay centered */
     left: 50%;
     transform: translateX(-50%); /* Adjust horizontally to truly center */
@@ -80,12 +69,6 @@ body, html {
     padding: 5px 10px;
     border-radius: 5px;
     margin: auto;
-    /*
-    margin-left: auto;
-    margin-right: 0;
-    display: flex;
-    align-self: right;
-    */
 }
 
 .logo {
@@ -169,4 +152,39 @@ body, html {
   margin-left: auto;
   margin-right: auto;
   width: 50%; /* or any specific width */
+}
+
+/*
+CSS for Bottom Banner
+*/
+
+.bottom-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #1e1e1e;
+    color: white;
+    padding: 20px;
+}
+
+.footer-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-section li {
+    padding: 5px 0; /* Spacing between list items */
+}
+
+.footer-section .social-media {
+    /* Styling for social media icons */
+}
+
+.footer-section .right {
+    text-align: right;
+}
+
+.footer-section img {
+    max-height: 50px; /* Adjust as necessary for your images */
+    margin: 10px; /* Spacing around images */
 }
