@@ -12,6 +12,10 @@ app = Flask(__name__)
 votes = {}
 vote_percentages = {}
 
+@app.route('/shop')
+def shop():
+    return render_template('shop.html')
+
 # Set locale to English to ensure weekday and month abbreviations are correctly interpreted
 locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 

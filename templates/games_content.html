@@ -12,7 +12,7 @@
             <div class="team" data-game-id="{{ game['game_id'] }}" data-team="{{ game['away_team_id'] }}"
                  onclick='highlightBox(this, {{ game["game_id"] | tojson | safe }}, {{ game["away_team_id"] | tojson | safe }}); vote({{ game["game_id"] | tojson | safe }}, {{ game["home_team_id"] | tojson | safe }}, {{ game["away_team_id"] | tojson | safe }}, {{ game["away_team_id"] | tojson | safe }});'>
             <div class="select-box">
-    <!--                <img src="{{ url_for('static', filename='images/' ~ game['away_team_id'])  + '.png'}}" alt="Away Team Logo">-->
+    <!--                <img src="{{ url_for('static', filename='teamLogos/' ~ game['away_team_id'])  + '.png'}}" alt="Away Team Logo">-->
                     <img alt="Away Team Logo">
                 </div>
                 <span>{{ game['away_team_id'] }}</span>
@@ -22,7 +22,7 @@
             <div class="team" data-game-id='{{ game["game_id"] }}' data-team='{{ game["home_team_id"] }}'
                  onclick='highlightBox(this, {{ game["game_id"] | tojson | safe }}, {{ game["home_team_id"] | tojson | safe }}); vote({{ game["game_id"] | tojson | safe }}, {{ game["home_team_id"] | tojson | safe }}, {{ game["away_team_id"] | tojson | safe }}, {{ game["home_team_id"] | tojson | safe }});'>
             <div class="select-box">
-    <!--                <img src="{{ url_for('static', filename='images/' ~ game['home_team_id']) + '.png'}}" alt="Home Team Logo">-->
+    <!--                <img src="{{ url_for('static', filename='teamLogos/' ~ game['home_team_id']) + '.png'}}" alt="Home Team Logo">-->
                     <img alt="Home Team Logo">
                 </div>
                 <span>{{ game['home_team_id'] }}</span>
