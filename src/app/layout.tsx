@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Favicon from "next/image";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -29,12 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <Favicon src="/vcl_logo3.png" alt="Varsity Club Lacrosse" width={16} height={16} />
-      </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
         <Toaster />
       </body>
