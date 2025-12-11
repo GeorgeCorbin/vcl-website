@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ArrowRight } from "lucide-react";
+import { SidebarAds, LeaderboardAd } from "@/components/ads";
 
 export default function TransfersPage() {
   // TODO: Fetch transfers from API
@@ -38,16 +39,22 @@ export default function TransfersPage() {
         </p>
       </div>
 
-      {transfers.length === 0 ? (
-        <Card className="border-border/50">
-          <CardContent className="py-16 text-center">
-            <p className="text-muted-foreground">
-              No transfers recorded yet. Check back soon!
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-8">
+      {/* Leaderboard Ad */}
+      <LeaderboardAd className="mb-8 hidden md:flex" />
+
+      <div className="flex gap-8">
+        {/* Main Content */}
+        <div className="flex-1 min-w-0">
+          {transfers.length === 0 ? (
+            <Card className="border-border/50">
+              <CardContent className="py-16 text-center">
+                <p className="text-muted-foreground">
+                  No transfers recorded yet. Check back soon!
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-8">
           {/* Confirmed Transfers */}
           <Card>
             <CardHeader>
@@ -149,8 +156,13 @@ export default function TransfersPage() {
               </CardContent>
             </Card>
           )}
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Sidebar Ads */}
+        <SidebarAds className="hidden lg:block w-[300px] flex-shrink-0 sticky top-20" />
+      </div>
     </div>
   );
 }
