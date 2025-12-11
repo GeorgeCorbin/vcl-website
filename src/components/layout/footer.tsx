@@ -56,9 +56,9 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="hover:text-foreground">
+                <a href="mailto:contact@varsityclublacrosse.com" className="hover:text-foreground">
                   Contact
-                </Link>
+                </a>
               </li>
             </ul>
           </div>

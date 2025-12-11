@@ -165,9 +165,12 @@ export default function HomePage() {
           </div>
           <p className="mt-6 text-center text-xs md:text-sm text-muted-foreground">
             Interested in sponsoring VCL?{" "}
-            <Link href="/contact" className="text-vcl-gold hover:underline">
+            <a
+              href="mailto:contact@varsityclublacrosse.com"
+              className="text-vcl-gold hover:underline"
+            >
               Contact us
-            </Link>
+            </a>
           </p>
         </div>
       </section>
