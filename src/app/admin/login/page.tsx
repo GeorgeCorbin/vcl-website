@@ -23,7 +23,7 @@ export default function AdminLoginPage() {
 
     // TODO: Replace with actual authentication
     // For now, using a simple check - replace with NextAuth or similar
-    if (email === "admin@vcl.com" && password === "admin123") {
+    if (email === "a@a" && password === "a") {
       // Set a simple session cookie (replace with proper auth)
       document.cookie = "vcl_admin_session=authenticated; path=/; max-age=86400";
       router.push("/admin");
