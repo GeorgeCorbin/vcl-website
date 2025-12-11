@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, Settings } from "lucide-react";
+import { Menu } from "lucide-react";
 import { useState } from "react";
 
 const navItems = [
@@ -54,11 +54,6 @@ export function Header() {
               {item.label}
             </Link>
           ))}
-          <Link href="/admin">
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-vcl-gold">
-              <Settings className="h-4 w-4" />
-            </Button>
-          </Link>
         </nav>
 
         {/* Mobile Navigation */}
@@ -98,14 +93,6 @@ export function Header() {
                   {item.label}
                 </Link>
               ))}
-              <Link
-                href="/admin"
-                onClick={() => setOpen(false)}
-                className="text-lg font-medium text-muted-foreground hover:text-vcl-gold transition-colors flex items-center gap-2 pt-4 border-t border-border/40"
-              >
-                <Settings className="h-4 w-4" />
-                Admin Dashboard
-              </Link>
             </nav>
           </SheetContent>
         </Sheet>

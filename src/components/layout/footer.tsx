@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Instagram, Twitter, Youtube } from "lucide-react";
+import { Instagram, Twitter, Youtube, Lock } from "lucide-react";
 
 export function Footer() {
   return (
@@ -97,8 +97,17 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 border-t border-border/40 pt-8 text-center text-sm text-muted-foreground">
+        <div className="mt-12 border-t border-border/40 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+        <div>
+        </div>
           <p>&copy; {new Date().getFullYear()} Varsity Club Lacrosse. All rights reserved.</p>
+          <Link 
+            href="/admin" 
+            className="flex items-center gap-2 hover:text-vcl-gold transition-colors"
+          >
+            <Lock className="h-3 w-3" />
+            Admin Login
+          </Link>
         </div>
       </div>
     </footer>

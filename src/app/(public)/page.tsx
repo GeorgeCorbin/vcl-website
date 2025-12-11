@@ -139,8 +139,41 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* Sponsors Section */}
       <section className="py-12 md:py-16 lg:py-20">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="text-center mb-8">
+            <h2 className="text-xl md:text-2xl font-bold tracking-tight">Our Sponsors</h2>
+            <p className="mt-2 text-sm md:text-base text-muted-foreground">
+              Thank you to our partners who support club lacrosse coverage
+            </p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 items-center justify-items-center">
+            {/* Placeholder sponsor slots */}
+            <div className="w-full h-20 md:h-24 rounded-lg border-2 border-dashed border-border/50 flex items-center justify-center text-muted-foreground text-xs md:text-sm">
+              Sponsor Logo
+            </div>
+            <div className="w-full h-20 md:h-24 rounded-lg border-2 border-dashed border-border/50 flex items-center justify-center text-muted-foreground text-xs md:text-sm">
+              Sponsor Logo
+            </div>
+            <div className="w-full h-20 md:h-24 rounded-lg border-2 border-dashed border-border/50 flex items-center justify-center text-muted-foreground text-xs md:text-sm">
+              Sponsor Logo
+            </div>
+            <div className="w-full h-20 md:h-24 rounded-lg border-2 border-dashed border-border/50 flex items-center justify-center text-muted-foreground text-xs md:text-sm">
+              Sponsor Logo
+            </div>
+          </div>
+          <p className="mt-6 text-center text-xs md:text-sm text-muted-foreground">
+            Interested in sponsoring VCL?{" "}
+            <Link href="/contact" className="text-vcl-gold hover:underline">
+              Contact us
+            </Link>
+          </p>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-12 md:py-16 lg:py-20 bg-muted/30">
         <div className="container mx-auto px-4 md:px-6">
           <div className="rounded-xl bg-vcl-gold p-6 md:p-10 lg:p-12 text-center text-vcl-gold-foreground">
             <h2 className="text-xl md:text-2xl lg:text-3xl font-bold tracking-tight">

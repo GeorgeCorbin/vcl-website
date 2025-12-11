@@ -11,6 +11,8 @@ import {
   Settings,
   Home,
   Menu,
+  LogOut,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -29,12 +31,14 @@ function Sidebar({ className }: { className?: string }) {
   const pathname = usePathname();
 
   return (
-    <div className={cn("pb-12", className)}>
-      <div className="space-y-4 py-4">
+    <div className={cn("flex flex-col h-full", className)}>
+      <div className="flex-1 space-y-4 py-4">
         <div className="px-3 py-2">
-          <Link href="/admin" className="flex items-center gap-2 mb-6">
-            <span className="text-xl font-bold">VCL Admin</span>
-          </Link>
+          <div className="flex items-center justify-between mb-6">
+            <Link href="/admin" className="flex items-center gap-2">
+              <span className="text-xl font-bold">VCL Admin</span>
+            </Link>
+          </div>
           <div className="space-y-1">
             {navItems.map((item) => (
               <Link
@@ -53,6 +57,25 @@ function Sidebar({ className }: { className?: string }) {
             ))}
           </div>
         </div>
+      </div>
+      <div className="border-t border-border/40 p-4 space-y-3">
+        <Link
+          href="/"
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-vcl-gold transition-colors"
+        >
+          <ExternalLink className="h-4 w-4" />
+          Back to Site
+        </Link>
+        <button
+          onClick={() => {
+            document.cookie = "vcl_admin_session=; path=/; max-age=0";
+            window.location.href = "/admin/login";
+          }}
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-red-500 transition-colors w-full"
+        >
+          <LogOut className="h-4 w-4" />
+          Sign Out
+        </button>
       </div>
     </div>
   );
@@ -90,7 +113,7 @@ export default function AdminLayout({
 
       {/* Main content */}
       <main className="flex-1 overflow-y-auto">
-        <div className="container py-6 md:py-8">{children}</div>
+        <div className="p-4 md:p-6 lg:p-8">{children}</div>
       </main>
     </div>
   );
