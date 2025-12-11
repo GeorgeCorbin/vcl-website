@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu } from "lucide-react";
+import { Menu, Settings } from "lucide-react";
 import { useState } from "react";
 
 const navItems = [
@@ -21,14 +22,24 @@ export function Header() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
-        <Link href="/" className="flex items-center space-x-2">
-          <span className="text-xl font-bold">VCL</span>
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
+        <Link href="/" className="flex items-center gap-3">
+          <Image
+            src="/vcl_logo3.png"
+            alt="Varsity Club Lacrosse"
+            width={40}
+            height={40}
+            className="h-10 w-auto"
+          />
+          <div className="hidden sm:block">
+            <span className="text-lg font-bold tracking-tight">Varsity Club Lacrosse</span>
+            <p className="text-xs text-vcl-gold font-medium">Strictly Club. Strictly Business.</p>
+          </div>
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-6">
+        <nav className="hidden md:flex items-center gap-6">
           {navItems.map((item) => (
             <Link
               key={item.href}
@@ -43,6 +54,11 @@ export function Header() {
               {item.label}
             </Link>
           ))}
+          <Link href="/admin">
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-vcl-gold">
+              <Settings className="h-4 w-4" />
+            </Button>
+          </Link>
         </nav>
 
         {/* Mobile Navigation */}
@@ -52,8 +68,21 @@ export function Header() {
               <Menu className="h-5 w-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="right">
-            <nav className="flex flex-col space-y-4 mt-8">
+          <SheetContent side="right" className="w-72">
+            <div className="flex items-center gap-3 mb-8">
+              <Image
+                src="/vcl_logo3.png"
+                alt="Varsity Club Lacrosse"
+                width={32}
+                height={32}
+                className="h-8 w-auto"
+              />
+              <div>
+                <span className="font-bold">VCL</span>
+                <p className="text-xs text-vcl-gold font-medium">Strictly Club. Strictly Business.</p>
+              </div>
+            </div>
+            <nav className="flex flex-col gap-4">
               {navItems.map((item) => (
                 <Link
                   key={item.href}
@@ -69,6 +98,14 @@ export function Header() {
                   {item.label}
                 </Link>
               ))}
+              <Link
+                href="/admin"
+                onClick={() => setOpen(false)}
+                className="text-lg font-medium text-muted-foreground hover:text-vcl-gold transition-colors flex items-center gap-2 pt-4 border-t border-border/40"
+              >
+                <Settings className="h-4 w-4" />
+                Admin Dashboard
+              </Link>
             </nav>
           </SheetContent>
         </Sheet>

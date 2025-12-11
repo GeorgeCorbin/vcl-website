@@ -38,19 +38,19 @@ export default function PollsPage() {
   };
 
   return (
-    <div className="container py-8 md:py-12">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
+    <div className="container mx-auto px-4 py-12 md:px-6 md:py-16">
+      <div className="mb-8 md:mb-10">
+        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight">
           Media Poll
         </h1>
-        <p className="mt-2 text-muted-foreground">
+        <p className="mt-2 text-sm md:text-base text-muted-foreground">
           Weekly rankings of the top MCLA teams.
         </p>
       </div>
 
       {!latestPoll ? (
-        <Card>
-          <CardContent className="py-12 text-center">
+        <Card className="border-border/50">
+          <CardContent className="py-16 text-center">
             <p className="text-muted-foreground">
               No polls published yet. Check back soon!
             </p>

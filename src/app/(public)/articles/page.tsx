@@ -16,24 +16,24 @@ export default function ArticlesPage() {
   }> = [];
 
   return (
-    <div className="container py-8 md:py-12">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Articles</h1>
-        <p className="mt-2 text-muted-foreground">
-          News, analysis, and coverage of MCLA lacrosse.
+    <div className="container mx-auto px-4 py-12 md:px-6 md:py-16">
+      <div className="mb-8 md:mb-10">
+        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight">Articles</h1>
+        <p className="mt-2 text-sm md:text-base text-muted-foreground">
+          News, analysis, and coverage of club lacrosse.
         </p>
       </div>
 
       {articles.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
+        <Card className="border-border/50">
+          <CardContent className="py-16 text-center">
             <p className="text-muted-foreground">
               No articles published yet. Check back soon!
             </p>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {articles.map((article) => (
             <Link key={article.id} href={`/articles/${article.slug}`}>
               <Card className="h-full hover:bg-accent/50 transition-colors">

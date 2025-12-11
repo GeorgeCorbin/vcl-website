@@ -28,19 +28,19 @@ export default function TransfersPage() {
   const rumoredTransfers = transfers.filter((t) => !t.confirmed);
 
   return (
-    <div className="container py-8 md:py-12">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
+    <div className="container mx-auto px-4 py-12 md:px-6 md:py-16">
+      <div className="mb-8 md:mb-10">
+        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight">
           Transfer Tracker
         </h1>
-        <p className="mt-2 text-muted-foreground">
-          Track player movements between MCLA programs.
+        <p className="mt-2 text-sm md:text-base text-muted-foreground">
+          Track player movements between club lacrosse programs.
         </p>
       </div>
 
       {transfers.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
+        <Card className="border-border/50">
+          <CardContent className="py-16 text-center">
             <p className="text-muted-foreground">
               No transfers recorded yet. Check back soon!
             </p>

@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "VCL - MCLA Lacrosse Coverage",
-  description: "Your source for MCLA lacrosse news, rankings, transfers, and analysis.",
+  title: "Varsity Club Lacrosse - Club Lacrosse Coverage",
+  description: "Strictly Club. Strictly Business. Your source for MCLA, SMLL, NCLL, WCLL lacrosse news, rankings, transfers, and analysis.",
 };
 
 export default function RootLayout({
