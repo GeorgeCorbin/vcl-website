@@ -87,6 +87,16 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const isAuthPage = pathname === "/admin/login";
+
+  if (isAuthPage) {
+    return (
+      <main className="min-h-screen bg-muted/30">
+        <div className="p-4 md:p-6 lg:p-8">{children}</div>
+      </main>
+    );
+  }
 
   return (
     <div className="flex min-h-screen">

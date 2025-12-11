@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -81,16 +82,21 @@ export default function AdminLoginPage() {
                 required
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? (
-                "Signing in..."
-              ) : (
-                <>
-                  <Lock className="mr-2 h-4 w-4" />
-                  Sign In
-                </>
-              )}
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button type="button" variant="outline" className="flex-1" asChild>
+                <Link href="/">Back to Site</Link>
+              </Button>
+              <Button type="submit" className="flex-1" disabled={loading}>
+                {loading ? (
+                  "Signing in..."
+                ) : (
+                  <>
+                    <Lock className="mr-2 h-4 w-4" />
+                    Sign In
+                  </>
+                )}
+              </Button>
+            </div>
           </form>
           <p className="mt-4 text-xs text-center text-muted-foreground">
             Contact an administrator if you need access.
