@@ -1,0 +1,217 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==================== AUTH ====================
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          Role      @default(EDITOR)
+  accounts      Account[]
+  sessions      Session[]
+  articles      Article[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+  CONTRIBUTOR
+}
+
+// ==================== EDITORIAL CONTENT ====================
+
+model Article {
+  id          String        @id @default(cuid())
+  title       String
+  slug        String        @unique
+  content     String        @db.Text
+  excerpt     String?       @db.Text
+  coverImage  String?
+  authorId    String
+  author      User          @relation(fields: [authorId], references: [id])
+  status      ArticleStatus @default(DRAFT)
+  featured    Boolean       @default(false)
+  tags        Tag[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  publishedAt DateTime?
+
+  @@index([status])
+  @@index([featured])
+  @@index([publishedAt])
+}
+
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Tag {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  slug     String    @unique
+  articles Article[]
+}
+
+// ==================== MEDIA POLLS ====================
+
+model PollWeek {
+  id          String      @id @default(cuid())
+  weekNumber  Int
+  season      String
+  notes       String?     @db.Text
+  status      PollStatus  @default(DRAFT)
+  publishedAt DateTime?
+  entries     PollEntry[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@unique([weekNumber, season])
+  @@index([status])
+}
+
+enum PollStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model PollEntry {
+  id           String   @id @default(cuid())
+  pollWeekId   String
+  pollWeek     PollWeek @relation(fields: [pollWeekId], references: [id], onDelete: Cascade)
+  teamId       String
+  team         Team     @relation(fields: [teamId], references: [id])
+  rank         Int
+  previousRank Int?
+  points       Int?
+  note         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([pollWeekId, teamId])
+  @@unique([pollWeekId, rank])
+}
+
+// ==================== TRANSFERS ====================
+
+model Transfer {
+  id         String   @id @default(cuid())
+  playerName String
+  fromTeamId String?
+  fromTeam   Team?    @relation("TransferFrom", fields: [fromTeamId], references: [id])
+  toTeamId   String?
+  toTeam     Team?    @relation("TransferTo", fields: [toTeamId], references: [id])
+  position   String?
+  classYear  String?
+  notes      String?  @db.Text
+  confirmed  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([confirmed])
+}
+
+// ==================== MCLA DATA (Future-Ready) ====================
+
+model Team {
+  id              String      @id @default(cuid())
+  mclaTeamId      String?     @unique
+  name            String
+  shortName       String?
+  conference      String?
+  division        Division?
+  logoUrl         String?
+  officialUrl     String?
+  active          Boolean     @default(true)
+  syncedFromMcla  Boolean     @default(false)
+  pollEntries     PollEntry[]
+  transfersFrom   Transfer[]  @relation("TransferFrom")
+  transfersTo     Transfer[]  @relation("TransferTo")
+  homeGames       Game[]      @relation("HomeTeam")
+  awayGames       Game[]      @relation("AwayTeam")
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([conference])
+  @@index([active])
+}
+
+enum Division {
+  D1
+  D2
+}
+
+enum GameStatus {
+  SCHEDULED
+  IN_PROGRESS
+  FINAL
+  POSTPONED
+  CANCELLED
+}
+
+model Game {
+  id          String     @id @default(cuid())
+  mclaGameId  String?    @unique
+  homeTeamId  String
+  homeTeam    Team       @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeamId  String
+  awayTeam    Team       @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  date        DateTime
+  homeScore   Int?
+  awayScore   Int?
+  status      GameStatus @default(SCHEDULED)
+  venue       String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([date])
+  @@index([status])
+}
