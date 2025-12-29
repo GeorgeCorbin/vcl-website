@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Instagram, Twitter, Youtube, Lock } from "lucide-react";
+import { FaInstagram, FaXTwitter, FaYoutube, FaLock } from "react-icons/fa6";
 
 export function Footer() {
   return (
@@ -73,7 +73,7 @@ export function Footer() {
                 className="flex items-center justify-center h-10 w-10 rounded-full bg-background border border-border hover:bg-vcl-gold hover:border-vcl-gold hover:text-vcl-gold-foreground transition-colors"
                 aria-label="Follow on Instagram"
               >
-                <Instagram className="h-5 w-5" />
+                <FaInstagram className="h-5 w-5" />
               </a>
               <a
                 href="https://x.com/VarsityLacrosse"
@@ -82,7 +82,7 @@ export function Footer() {
                 className="flex items-center justify-center h-10 w-10 rounded-full bg-background border border-border hover:bg-vcl-gold hover:border-vcl-gold hover:text-vcl-gold-foreground transition-colors"
                 aria-label="Follow on X"
               >
-                <Twitter className="h-5 w-5" />
+                <FaXTwitter className="h-5 w-5" />
               </a>
               <a
                 href="https://www.youtube.com/channel/UCCaeRbVrXas2w-Fiu4ZnwTA"
@@ -91,7 +91,7 @@ export function Footer() {
                 className="flex items-center justify-center h-10 w-10 rounded-full bg-background border border-border hover:bg-vcl-gold hover:border-vcl-gold hover:text-vcl-gold-foreground transition-colors"
                 aria-label="Subscribe on YouTube"
               >
-                <Youtube className="h-5 w-5" />
+                <FaYoutube className="h-5 w-5" />
               </a>
             </div>
           </div>
@@ -105,7 +105,7 @@ export function Footer() {
             href="/admin" 
             className="flex items-center gap-2 hover:text-vcl-gold transition-colors"
           >
-            <Lock className="h-3 w-3" />
+            <FaLock className="h-3 w-3" />
             Admin Login
           </Link>
         </div>
