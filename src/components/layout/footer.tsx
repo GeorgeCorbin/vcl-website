@@ -101,6 +101,15 @@ export function Footer() {
         <div>
         </div>
           <p>&copy; {new Date().getFullYear()} Varsity Club Lacrosse. All rights reserved.</p>
+          <div className="flex items-center gap-4 text-xs uppercase tracking-wide">
+            <Link href="/privacy" className="hover:text-vcl-gold transition-colors">
+              Privacy Policy
+            </Link>
+            <span className="text-border">|</span>
+            <Link href="/terms" className="hover:text-vcl-gold transition-colors">
+              Terms of Service
+            </Link>
+          </div>
           <Link 
             href="/admin" 
             className="flex items-center gap-2 hover:text-vcl-gold transition-colors"
