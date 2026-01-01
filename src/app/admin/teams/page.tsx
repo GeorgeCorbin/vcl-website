@@ -1,10 +1,8 @@
-"use client";
-
-import { useState } from "react";
 import Link from "next/link";
+import prisma from "@/lib/db";
+import { League } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -13,42 +11,38 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Pencil, Trash2, Search, RefreshCw } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw } from "lucide-react";
+import { deleteTeam } from "./actions";
+import { getActiveLeagues } from "@/lib/league-config";
 
-type Team = {
-  id: string;
-  name: string;
-  shortName: string | null;
-  conference: string | null;
-  division: "D1" | "D2" | null;
-  active: boolean;
-  syncedFromMcla: boolean;
+type PageProps = {
+  searchParams: Promise<{ league?: string }>;
 };
 
-export default function TeamsPage() {
-  const [search, setSearch] = useState("");
-  const [teams] = useState<Team[]>([]);
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
-  const filteredTeams = teams.filter(
-    (team) =>
-      team.name.toLowerCase().includes(search.toLowerCase()) ||
-      team.conference?.toLowerCase().includes(search.toLowerCase())
-  );
+export default async function TeamsPage({ searchParams }: PageProps) {
+  const { league } = await searchParams;
+  const normalizedLeague = league?.toUpperCase() as League | undefined;
+
+  const [teams, leagues] = await Promise.all([
+    prisma.team.findMany({
+      where: normalizedLeague ? { league: normalizedLeague } : {},
+      orderBy: { name: "asc" },
+    }),
+    getActiveLeagues(),
+  ]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-8">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
+          <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Database</p>
           <h1 className="text-3xl font-bold tracking-tight">Teams</h1>
-          <p className="text-muted-foreground">
-            Manage MCLA teams database.
-          </p>
+          <p className="text-muted-foreground">Manage teams across all leagues.</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" disabled>
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Sync from MCLA
-          </Button>
           <Link href="/admin/teams/new">
             <Button>
               <Plus className="mr-2 h-4 w-4" />
@@ -58,23 +52,38 @@ export default function TeamsPage() {
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search teams..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
-        </div>
+      <div className="flex flex-wrap gap-2 rounded-2xl border border-border/50 bg-card p-2">
+        <Link
+          href="/admin/teams"
+          className={`rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
+            !normalizedLeague
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:bg-muted"
+          }`}
+        >
+          All
+        </Link>
+        {leagues.map((league) => (
+          <Link
+            key={league.id}
+            href={`/admin/teams?league=${league.code}`}
+            className={`rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
+              normalizedLeague === league.code
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-muted"
+            }`}
+          >
+            {league.code}
+          </Link>
+        ))}
       </div>
 
-      <div className="rounded-md border">
+      <div className="rounded-3xl border border-border/50 bg-card">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Team</TableHead>
+              <TableHead>League</TableHead>
               <TableHead>Conference</TableHead>
               <TableHead>Division</TableHead>
               <TableHead>Status</TableHead>
@@ -83,17 +92,14 @@ export default function TeamsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredTeams.length === 0 ? (
+            {teams.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">
-                  <p className="text-muted-foreground">No teams found.</p>
-                  <Link href="/admin/teams/new">
-                    <Button variant="link">Add your first team</Button>
-                  </Link>
+                <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
+                  No teams found. Add your first team to get started.
                 </TableCell>
               </TableRow>
             ) : (
-              filteredTeams.map((team) => (
+              teams.map((team) => (
                 <TableRow key={team.id}>
                   <TableCell>
                     <div>
@@ -104,6 +110,11 @@ export default function TeamsPage() {
                         </div>
                       )}
                     </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="uppercase">
+                      {team.league}
+                    </Badge>
                   </TableCell>
                   <TableCell>{team.conference || "—"}</TableCell>
                   <TableCell>{team.division || "—"}</TableCell>
@@ -124,9 +135,17 @@ export default function TeamsPage() {
                           <Pencil className="h-4 w-4" />
                         </Button>
                       </Link>
-                      <Button variant="ghost" size="icon">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <form action={deleteTeam}>
+                        <input type="hidden" name="id" value={team.id} />
+                        <Button
+                          type="submit"
+                          variant="ghost"
+                          size="icon"
+                          className="text-red-500 hover:text-red-600"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </form>
                     </div>
                   </TableCell>
                 </TableRow>

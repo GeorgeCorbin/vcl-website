@@ -1,6 +1,14 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
+const availableLeagues = [
+  { code: "MCLA", name: "Men's Collegiate Lacrosse Association", active: true },
+  { code: "SMLL", name: "Southern Men's Lacrosse League", active: true },
+  { code: "NCLL", name: "National College Lacrosse League", active: true },
+  { code: "WCLL", name: "Western Collegiate Lacrosse League", active: true },
+  { code: "OTHER", name: "Other Leagues", active: true },
+];
+
 export default function SettingsPage() {
   return (
     <div className="space-y-6">
@@ -42,7 +50,11 @@ export default function SettingsPage() {
           <CardContent className="space-y-4">
             <div>
               <p className="text-sm font-medium">Site Name</p>
-              <p className="text-sm text-muted-foreground">VCL - Virtual Club Lacrosse</p>
+              <p className="text-sm text-muted-foreground">VCL - Varsity Club Lacrosse</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium">Tagline</p>
+              <p className="text-sm text-muted-foreground">Strictly Club. Strictly Business.</p>
             </div>
             <div>
               <p className="text-sm font-medium">Version</p>

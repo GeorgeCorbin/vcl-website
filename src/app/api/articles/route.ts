@@ -32,11 +32,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { title, slug, content, excerpt, coverImage, authorId, status, featured, tagIds } = body;
+    const { title, slug, content, excerpt, coverImage, author, status, featured, tagIds, league, publishedAt } = body;
 
-    if (!title || !slug || !content || !authorId) {
+    if (!title || !slug || !content || !author) {
       return NextResponse.json(
-        { error: "Missing required fields: title, slug, content, authorId" },
+        { error: "Missing required fields: title, slug, content, author" },
         { status: 400 }
       );
     }
@@ -47,10 +47,12 @@ export async function POST(request: NextRequest) {
       content,
       excerpt,
       coverImage,
-      authorId,
+      author: author.trim(),
       status,
       featured,
       tagIds,
+      league: league ?? null,
+      publishedAt: publishedAt ? new Date(publishedAt) : null,
     });
 
     return NextResponse.json(article, { status: 201 });

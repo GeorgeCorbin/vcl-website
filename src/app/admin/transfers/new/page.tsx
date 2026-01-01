@@ -1,21 +1,13 @@
-"use client";
-
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import prisma from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
+import { createTransfer } from "../actions";
+import { getActiveLeagues } from "@/lib/league-config";
 
 const positions = [
   "Attack",
@@ -28,50 +20,18 @@ const positions = [
 
 const classYears = ["Freshman", "Sophomore", "Junior", "Senior", "Graduate"];
 
-export default function NewTransferPage() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    playerName: "",
-    fromTeamId: "",
-    toTeamId: "",
-    position: "",
-    classYear: "",
-    notes: "",
-    confirmed: false,
-  });
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
-  // TODO: Fetch teams from API
-  const teams: { id: string; name: string }[] = [];
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      const response = await fetch("/api/transfers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          fromTeamId: formData.fromTeamId || undefined,
-          toTeamId: formData.toTeamId || undefined,
-        }),
-      });
-
-      if (response.ok) {
-        router.push("/admin/transfers");
-      } else {
-        const error = await response.json();
-        alert(error.error || "Failed to create transfer");
-      }
-    } catch (error) {
-      console.error("Error creating transfer:", error);
-      alert("Failed to create transfer");
-    } finally {
-      setLoading(false);
-    }
-  };
+export default async function NewTransferPage() {
+  const [teams, leagues] = await Promise.all([
+    prisma.team.findMany({
+      where: { active: true },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, league: true },
+    }),
+    getActiveLeagues(),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -87,7 +47,7 @@ export default function NewTransferPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit}>
+      <form action={createTransfer}>
         <Card className="max-w-xl">
           <CardHeader>
             <CardTitle>Transfer Details</CardTitle>
@@ -97,103 +57,93 @@ export default function NewTransferPage() {
               <Label htmlFor="playerName">Player Name</Label>
               <Input
                 id="playerName"
-                value={formData.playerName}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    playerName: e.target.value,
-                  }))
-                }
+                name="playerName"
                 placeholder="Enter player name"
                 required
               />
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="league">League</Label>
+              <select
+                id="league"
+                name="league"
+                required
+                className="w-full rounded-lg border border-border/60 bg-background px-3 py-2"
+              >
+                {leagues.map((league) => (
+                  <option key={league.id} value={league.code}>
+                    {league.code}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="fromTeam">From Team</Label>
-                <Select
-                  value={formData.fromTeamId}
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, fromTeamId: value }))
-                  }
+                <Label htmlFor="fromTeamId">From Team</Label>
+                <select
+                  id="fromTeamId"
+                  name="fromTeamId"
+                  className="w-full rounded-lg border border-border/60 bg-background px-3 py-2"
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select team" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {teams.map((team) => (
-                      <SelectItem key={team.id} value={team.id}>
-                        {team.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <option value="">Select team (optional)</option>
+                  {teams.map((team) => (
+                    <option key={team.id} value={team.id}>
+                      {team.name} ({team.league})
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="toTeam">To Team</Label>
-                <Select
-                  value={formData.toTeamId}
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, toTeamId: value }))
-                  }
+                <Label htmlFor="toTeamId">To Team</Label>
+                <select
+                  id="toTeamId"
+                  name="toTeamId"
+                  className="w-full rounded-lg border border-border/60 bg-background px-3 py-2"
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select team" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {teams.map((team) => (
-                      <SelectItem key={team.id} value={team.id}>
-                        {team.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <option value="">Select team (optional)</option>
+                  {teams.map((team) => (
+                    <option key={team.id} value={team.id}>
+                      {team.name} ({team.league})
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="position">Position</Label>
-                <Select
-                  value={formData.position}
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, position: value }))
-                  }
+                <select
+                  id="position"
+                  name="position"
+                  className="w-full rounded-lg border border-border/60 bg-background px-3 py-2"
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select position" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {positions.map((pos) => (
-                      <SelectItem key={pos} value={pos}>
-                        {pos}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <option value="">Select position</option>
+                  {positions.map((pos) => (
+                    <option key={pos} value={pos}>
+                      {pos}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="classYear">Class Year</Label>
-                <Select
-                  value={formData.classYear}
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, classYear: value }))
-                  }
+                <select
+                  id="classYear"
+                  name="classYear"
+                  className="w-full rounded-lg border border-border/60 bg-background px-3 py-2"
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select class" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {classYears.map((year) => (
-                      <SelectItem key={year} value={year}>
-                        {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <option value="">Select class</option>
+                  {classYears.map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
@@ -201,10 +151,7 @@ export default function NewTransferPage() {
               <Label htmlFor="notes">Notes (optional)</Label>
               <Textarea
                 id="notes"
-                value={formData.notes}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, notes: e.target.value }))
-                }
+                name="notes"
                 placeholder="Any additional notes about this transfer..."
                 rows={3}
               />
@@ -214,21 +161,15 @@ export default function NewTransferPage() {
               <input
                 type="checkbox"
                 id="confirmed"
-                checked={formData.confirmed}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    confirmed: e.target.checked,
-                  }))
-                }
+                name="confirmed"
                 className="h-4 w-4 rounded border-gray-300"
               />
               <Label htmlFor="confirmed">Confirmed transfer</Label>
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full">
               <Save className="mr-2 h-4 w-4" />
-              {loading ? "Saving..." : "Save Transfer"}
+              Save Transfer
             </Button>
           </CardContent>
         </Card>

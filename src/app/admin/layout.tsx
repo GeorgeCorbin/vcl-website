@@ -13,17 +13,24 @@ import {
   Menu,
   LogOut,
   ExternalLink,
+  FileEdit,
+  MonitorPlay,
+  Trophy,
+  DollarSign,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: Home },
   { href: "/admin/articles", label: "Articles", icon: FileText },
+  { href: "/admin/teams", label: "Teams", icon: Users },
   { href: "/admin/polls", label: "Media Polls", icon: BarChart3 },
   { href: "/admin/transfers", label: "Transfers", icon: ArrowLeftRight },
-  { href: "/admin/teams", label: "Teams", icon: Users },
+  { href: "/admin/leagues", label: "Leagues", icon: Trophy },
+  { href: "/admin/content", label: "Content", icon: FileEdit },
+  { href: "/admin/ads", label: "Ads", icon: DollarSign },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
@@ -87,14 +94,29 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const isAuthPage = pathname === "/admin/login";
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   if (isAuthPage) {
     return (
       <main className="min-h-screen bg-muted/30">
         <div className="p-4 md:p-6 lg:p-8">{children}</div>
       </main>
+    );
+  }
+
+  if (!mounted) {
+    return (
+      <div className="flex min-h-screen bg-background">
+        <main className="flex-1">
+          <div className="p-4 md:p-6 lg:p-8" />
+        </main>
+      </div>
     );
   }
 

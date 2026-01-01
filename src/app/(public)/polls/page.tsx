@@ -10,25 +10,102 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ArrowUp, ArrowDown, Minus } from "lucide-react";
-import { SidebarAds, LeaderboardAd, InlineAd } from "@/components/ads";
+import { SidebarAds, LeaderboardAd } from "@/components/ads";
+import { PollService } from "@/lib/services";
+import { getActiveLeagues, getDivisionsForLeague } from "@/lib/league-config";
+import { League } from "@prisma/client";
+import PollsSelector from "./polls-selector";
+import prisma from "@/lib/db";
 
-export default function PollsPage() {
-  // TODO: Fetch latest poll from API
-  const latestPoll = null as {
-    id: string;
-    weekNumber: number;
-    season: string;
-    notes: string | null;
-    publishedAt: string;
-    entries: Array<{
-      id: string;
-      rank: number;
-      previousRank: number | null;
-      points: number | null;
-      note: string | null;
-      team: { id: string; name: string; conference: string | null };
-    }>;
-  } | null;
+export const dynamic = "force-dynamic";
+
+type PageProps = {
+  searchParams: Promise<{
+    league?: string;
+    season?: string;
+    week?: string;
+    division?: string;
+  }>;
+};
+
+export default async function PollsPage({ searchParams }: PageProps) {
+  const params = await searchParams;
+  const leagues = await getActiveLeagues();
+  
+  const selectedLeague = (params.league?.toUpperCase() as League) || leagues[0]?.code;
+  const selectedSeason = params.season;
+  const selectedWeek = params.week ? parseInt(params.week) : undefined;
+  const selectedDivision = params.division;
+
+  // Get divisions for the selected league
+  const divisions = selectedLeague ? await getDivisionsForLeague(selectedLeague) : [];
+  const availableDivisions = divisions.map((d) => d.name);
+  
+  // Default to first division if multiple divisions exist and none selected
+  const effectiveDivision = selectedDivision || (availableDivisions.length > 1 ? availableDivisions[0] : undefined);
+  
+  // Map division name to code for database queries
+  const selectedDivisionCode = effectiveDivision 
+    ? divisions.find(d => d.name === effectiveDivision)?.code 
+    : undefined;
+
+  // Get available weeks for the selected league and division
+  const availableWeeks = await prisma.pollWeek.findMany({
+    where: {
+      league: selectedLeague,
+      ...(selectedDivisionCode && { division: selectedDivisionCode }),
+      status: "PUBLISHED",
+    },
+    select: {
+      season: true,
+      weekNumber: true,
+      division: true,
+    },
+    // When division is selected, only distinct by season/week
+    // When no division, distinct by all three to show all combinations
+    distinct: selectedDivisionCode 
+      ? ["season", "weekNumber"] 
+      : ["season", "weekNumber", "division"],
+    orderBy: [{ season: "desc" }, { weekNumber: "desc" }],
+  });
+
+  // Fetch the poll based on selections, or latest if no selection
+  let displayPoll;
+  if (selectedSeason && selectedWeek) {
+    displayPoll = await prisma.pollWeek.findFirst({
+      where: {
+        league: selectedLeague,
+        season: selectedSeason,
+        weekNumber: selectedWeek,
+        ...(selectedDivisionCode && { division: selectedDivisionCode }),
+        status: "PUBLISHED",
+      },
+      include: {
+        entries: {
+          include: { team: true },
+          orderBy: { rank: "asc" },
+        },
+      },
+    });
+  } else {
+    // Get latest poll for selected league and division
+    displayPoll = await prisma.pollWeek.findFirst({
+      where: {
+        league: selectedLeague,
+        ...(selectedDivisionCode && { division: selectedDivisionCode }),
+        status: "PUBLISHED",
+      },
+      include: {
+        entries: {
+          include: { team: true },
+          orderBy: { rank: "asc" },
+        },
+      },
+      orderBy: [{ season: "desc" }, { weekNumber: "desc" }],
+    });
+  }
+
+  const latestPoll = displayPoll;
 
   const getRankChange = (current: number, previous: number | null) => {
     if (previous === null) return { icon: null, text: "NR", color: "text-green-600" };
@@ -42,11 +119,24 @@ export default function PollsPage() {
     <div className="container mx-auto px-4 py-12 md:px-6 md:py-16">
       <div className="mb-8 md:mb-10">
         <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight">
-          Media Poll
+          Media Polls
         </h1>
         <p className="mt-2 text-sm md:text-base text-muted-foreground">
-          Weekly rankings of the top MCLA teams.
+          Weekly rankings across all leagues.
         </p>
+      </div>
+
+      {/* Poll Selector */}
+      <div className="mb-8">
+        <PollsSelector
+          leagues={leagues}
+          availableWeeks={availableWeeks}
+          availableDivisions={availableDivisions}
+          selectedLeague={selectedLeague}
+          selectedWeek={selectedWeek?.toString()}
+          selectedSeason={selectedSeason}
+          selectedDivision={effectiveDivision}
+        />
       </div>
 
       {/* Leaderboard Ad */}
@@ -74,7 +164,7 @@ export default function PollsPage() {
                         </CardTitle>
                         <p className="text-sm text-muted-foreground mt-1">
                           Published{" "}
-                          {new Date(latestPoll.publishedAt).toLocaleDateString()}
+                          {latestPoll.publishedAt ? new Date(latestPoll.publishedAt).toLocaleDateString() : "Recently"}
                         </p>
                       </div>
                       <Badge>Latest</Badge>

@@ -1,5 +1,5 @@
 import prisma from "@/lib/db";
-import { PollStatus, Prisma } from "@prisma/client";
+import { League, PollStatus, Prisma } from "@prisma/client";
 
 export type PollWeekWithEntries = Prisma.PollWeekGetPayload<{
   include: { entries: { include: { team: true } } };
@@ -31,6 +31,18 @@ export class PollService {
     });
   }
 
+  static async getByLeagueSeasonWeek(league: League, season: string, weekNumber: number) {
+    return prisma.pollWeek.findFirst({
+      where: { league, season, weekNumber },
+      include: {
+        entries: {
+          include: { team: true },
+          orderBy: { rank: "asc" },
+        },
+      },
+    });
+  }
+
   static async getLatestPublished() {
     return prisma.pollWeek.findFirst({
       where: { status: "PUBLISHED" },
@@ -47,18 +59,6 @@ export class PollService {
   static async getById(id: string) {
     return prisma.pollWeek.findUnique({
       where: { id },
-      include: {
-        entries: {
-          include: { team: true },
-          orderBy: { rank: "asc" },
-        },
-      },
-    });
-  }
-
-  static async getByWeekAndSeason(weekNumber: number, season: string) {
-    return prisma.pollWeek.findUnique({
-      where: { weekNumber_season: { weekNumber, season } },
       include: {
         entries: {
           include: { team: true },

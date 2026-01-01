@@ -1,9 +1,19 @@
 import prisma from "@/lib/db";
-import { ArticleStatus, Prisma } from "@prisma/client";
+import { ArticleStatus, League, Prisma } from "@prisma/client";
 
-export type ArticleWithAuthor = Prisma.ArticleGetPayload<{
-  include: { author: true; tags: true };
+export type ArticleWithRelations = Prisma.ArticleGetPayload<{
+  include: { tags: true };
 }>;
+
+const normalizeLeague = (value?: string | League | null): League | null | undefined => {
+  if (value === undefined) return undefined;
+  if (value === null || value === "") return null;
+  const upperValue = value.toString().toUpperCase();
+  if (upperValue in League) {
+    return upperValue as League;
+  }
+  return undefined;
+};
 
 export class ArticleService {
   static async list(options?: {
@@ -22,7 +32,6 @@ export class ArticleService {
         ...(tagSlug && { tags: { some: { slug: tagSlug } } }),
       },
       include: {
-        author: { select: { id: true, name: true, image: true } },
         tags: true,
       },
       orderBy: { publishedAt: "desc" },
@@ -35,7 +44,6 @@ export class ArticleService {
     return prisma.article.findUnique({
       where: { slug },
       include: {
-        author: { select: { id: true, name: true, image: true } },
         tags: true,
       },
     });
@@ -45,7 +53,6 @@ export class ArticleService {
     return prisma.article.findUnique({
       where: { id },
       include: {
-        author: { select: { id: true, name: true, image: true } },
         tags: true,
       },
     });
@@ -57,21 +64,25 @@ export class ArticleService {
     content: string;
     excerpt?: string;
     coverImage?: string;
-    authorId: string;
+    author?: string | null;
     status?: ArticleStatus;
     featured?: boolean;
     tagIds?: string[];
+    league?: string | League | null;
+    publishedAt?: Date | null;
   }) {
-    const { tagIds, ...articleData } = data;
+    const { tagIds, league, ...articleData } = data;
+    const normalizedLeague = normalizeLeague(league);
 
     return prisma.article.create({
       data: {
         ...articleData,
+        ...(normalizedLeague !== undefined && { league: normalizedLeague }),
         ...(tagIds && {
           tags: { connect: tagIds.map((id) => ({ id })) },
         }),
       },
-      include: { author: true, tags: true },
+      include: { tags: true },
     });
   }
 
@@ -83,23 +94,27 @@ export class ArticleService {
       content?: string;
       excerpt?: string;
       coverImage?: string;
+      author?: string | null;
       status?: ArticleStatus;
       featured?: boolean;
       tagIds?: string[];
+      league?: string | League | null;
       publishedAt?: Date | null;
     }
   ) {
-    const { tagIds, ...articleData } = data;
+    const { tagIds, league, ...articleData } = data;
+    const normalizedLeague = normalizeLeague(league);
 
     return prisma.article.update({
       where: { id },
       data: {
         ...articleData,
+        ...(normalizedLeague !== undefined && { league: normalizedLeague }),
         ...(tagIds && {
           tags: { set: tagIds.map((id) => ({ id })) },
         }),
       },
-      include: { author: true, tags: true },
+      include: { tags: true },
     });
   }
 

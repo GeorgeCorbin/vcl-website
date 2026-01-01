@@ -18,7 +18,6 @@ model User {
   role          Role      @default(EDITOR)
   accounts      Account[]
   sessions      Session[]
-  articles      Article[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -71,21 +70,21 @@ model Article {
   id          String        @id @default(cuid())
   title       String
   slug        String        @unique
+  excerpt     String?
   content     String        @db.Text
-  excerpt     String?       @db.Text
   coverImage  String?
-  authorId    String
-  author      User          @relation(fields: [authorId], references: [id])
   status      ArticleStatus @default(DRAFT)
   featured    Boolean       @default(false)
+  author      String?
+  league      League?
+  publishedAt DateTime?
   tags        Tag[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
-  publishedAt DateTime?
 
   @@index([status])
-  @@index([featured])
   @@index([publishedAt])
+  @@index([league])
 }
 
 enum ArticleStatus {
@@ -101,12 +100,21 @@ model Tag {
   articles Article[]
 }
 
+model UploadedImage {
+  id        String   @id @default(cuid())
+  url       String
+  filename  String
+  createdAt DateTime @default(now())
+}
+
 // ==================== MEDIA POLLS ====================
 
 model PollWeek {
   id          String      @id @default(cuid())
   weekNumber  Int
   season      String
+  league      League      @default(MCLA)
+  division    String?
   notes       String?     @db.Text
   status      PollStatus  @default(DRAFT)
   publishedAt DateTime?
@@ -114,8 +122,9 @@ model PollWeek {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
-  @@unique([weekNumber, season])
+  @@unique([weekNumber, season, league, division])
   @@index([status])
+  @@index([league])
 }
 
 enum PollStatus {
@@ -149,6 +158,7 @@ model Transfer {
   fromTeam   Team?    @relation("TransferFrom", fields: [fromTeamId], references: [id])
   toTeamId   String?
   toTeam     Team?    @relation("TransferTo", fields: [toTeamId], references: [id])
+  league     League   @default(MCLA)
   position   String?
   classYear  String?
   notes      String?  @db.Text
@@ -157,6 +167,7 @@ model Transfer {
   updatedAt  DateTime @updatedAt
 
   @@index([confirmed])
+  @@index([league])
 }
 
 // ==================== MCLA DATA (Future-Ready) ====================
@@ -166,6 +177,7 @@ model Team {
   mclaTeamId      String?     @unique
   name            String
   shortName       String?
+  league          League      @default(MCLA)
   conference      String?
   division        Division?
   logoUrl         String?
@@ -182,6 +194,7 @@ model Team {
 
   @@index([conference])
   @@index([active])
+  @@index([league])
 }
 
 enum Division {
@@ -195,6 +208,14 @@ enum GameStatus {
   FINAL
   POSTPONED
   CANCELLED
+}
+
+enum League {
+  MCLA
+  SMLL
+  NCLL
+  WCLL
+  OTHER
 }
 
 model Game {
@@ -214,4 +235,86 @@ model Game {
 
   @@index([date])
   @@index([status])
+}
+
+// ==================== CONTENT MANAGEMENT ====================
+
+model Page {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  content   String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AdUnit {
+  id          String   @id @default(cuid())
+  name        String
+  adType      AdType
+  code        String   @db.Text
+  enabled     Boolean  @default(true)
+  placement   String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum AdType {
+  DISPLAY
+  LEADERBOARD
+  SIDEBAR
+  POPUP
+  INLINE
+}
+
+// ==================== LEAGUE CONFIGURATION ====================
+
+model LeagueConfig {
+  id          String              @id @default(cuid())
+  name        String
+  code        String              @unique
+  active      Boolean             @default(true)
+  conferences Conference[]
+  divisions   LeagueDivision[]
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+}
+
+model Conference {
+  id             String            @id @default(cuid())
+  name           String
+  code           String?
+  leagueConfigId String
+  leagueConfig   LeagueConfig      @relation(fields: [leagueConfigId], references: [id], onDelete: Cascade)
+  regions        ConferenceRegion[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([leagueConfigId])
+}
+
+model LeagueDivision {
+  id             String       @id @default(cuid())
+  name           String
+  code           String
+  displayOrder   Int          @default(0)
+  leagueConfigId String
+  leagueConfig   LeagueConfig @relation(fields: [leagueConfigId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([leagueConfigId])
+}
+
+model ConferenceRegion {
+  id           String     @id @default(cuid())
+  name         String
+  code         String?
+  conferenceId String
+  conference   Conference @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([conferenceId])
 }
