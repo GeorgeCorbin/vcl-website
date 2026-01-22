@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ArticleService } from "@/lib/services";
-import { ArticleStatus } from "@prisma/client";
+import type { ArticleStatus } from "@prisma/client";
 
 export async function GET(request: NextRequest) {
   try {
