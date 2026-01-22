@@ -86,7 +86,7 @@ export default async function EditContentPage({ params }: PageProps) {
           <li>• Use &lt;h2&gt; and &lt;h3&gt; for section headings</li>
           <li>• Use &lt;p&gt; for paragraphs</li>
           <li>• Use &lt;ul&gt; and &lt;li&gt; for bullet lists</li>
-          <li>• Use &lt;a href="url"&gt; for links</li>
+          <li>• Use &lt;a href=&quot;url&quot;&gt; for links</li>
           <li>• Use &lt;strong&gt; for bold text</li>
         </ul>
       </div>

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Save } from "lucide-react";
-import { createPollWeek } from "../actions";
+import { createPollWeek, type PollActionState } from "../actions";
 
 type League = {
   id: string;
@@ -26,19 +26,15 @@ type Props = {
   currentYear: number;
 };
 
-type FormState = {
-  error: string | null;
-};
-
 const statuses = [
   { label: "Draft", value: "DRAFT" },
   { label: "Published", value: "PUBLISHED" },
 ];
 
-const initialState: FormState = { error: null };
+const initialState: PollActionState = { error: null };
 
 export default function PollForm({ leagues, currentYear }: Props) {
-  const [state, formAction] = useActionState<FormState, FormData>(createPollWeek, initialState);
+  const [state, formAction] = useActionState<PollActionState, FormData>(createPollWeek, initialState);
   const [selectedLeague, setSelectedLeague] = useState(leagues[0]?.code || "");
   const [divisions, setDivisions] = useState<Division[]>([]);
 
@@ -170,7 +166,7 @@ export default function PollForm({ leagues, currentYear }: Props) {
           <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
             <p className="font-medium">📝 Next Step</p>
             <p className="mt-1 text-blue-800">
-              After creating the poll week, you'll be able to add teams and set their rankings on the edit page.
+              After creating the poll week, you&apos;ll be able to add teams and set their rankings on the edit page.
             </p>
           </div>
 

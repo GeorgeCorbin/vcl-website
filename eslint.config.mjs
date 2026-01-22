@@ -5,7 +5,7 @@ import tseslint from "typescript-eslint";
 
 const config = [
   {
-    ignores: [".next/**", "node_modules/**", "prisma/generated/**"],
+    ignores: [".next/**", "**/.next/**", "node_modules/**", "prisma/generated/**", "smll copy/**"],
   },
   ...tseslint.configs.recommended,
   {

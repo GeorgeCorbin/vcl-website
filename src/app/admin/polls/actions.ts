@@ -5,7 +5,19 @@ import { redirect } from "next/navigation";
 import prisma from "@/lib/db";
 import { League, PollStatus } from "@prisma/client";
 
-export async function createPollWeek(prevState: any, formData: FormData) {
+export type PollActionState = {
+  error: string | null;
+};
+
+type PollEntryInput = {
+  teamId: string;
+  rank: number;
+  previousRank: number | null;
+  points: number | null;
+  note: string | null;
+};
+
+export async function createPollWeek(_prevState: PollActionState, formData: FormData): Promise<PollActionState> {
   const weekNumber = parseInt(formData.get("weekNumber") as string);
   const season = (formData.get("season") as string).trim();
   const league = (formData.get("league") as string) as League;
@@ -37,13 +49,15 @@ export async function createPollWeek(prevState: any, formData: FormData) {
       league,
       division,
       notes,
-      status: "DRAFT",
+      status,
       publishedAt: null,
     },
   });
 
   revalidatePath("/admin/polls");
   redirect(`/admin/polls/${pollWeek.id}`);
+
+  return { error: null };
 }
 
 export async function updatePollWeek(formData: FormData) {
@@ -112,7 +126,7 @@ export async function updatePollEntries(formData: FormData) {
   
   if (!pollWeekId || !entriesJson) return;
 
-  const entries = JSON.parse(entriesJson);
+  const entries = JSON.parse(entriesJson) as PollEntryInput[];
 
   // Delete all existing entries
   await prisma.pollEntry.deleteMany({
@@ -122,7 +136,7 @@ export async function updatePollEntries(formData: FormData) {
   // Create new entries
   if (entries.length > 0) {
     await prisma.pollEntry.createMany({
-      data: entries.map((entry: any) => ({
+      data: entries.map((entry) => ({
         pollWeekId,
         teamId: entry.teamId,
         rank: entry.rank,

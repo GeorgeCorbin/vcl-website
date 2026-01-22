@@ -2,7 +2,7 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import prisma from "@/lib/db";
-import { ArticleStatus } from "@prisma/client";
+import type { ArticleStatus, League } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -26,13 +26,13 @@ export const revalidate = 0;
 export default async function ArticlesPage({ searchParams }: PageProps) {
   const { status, league } = await searchParams;
   const normalizedStatus = status?.toUpperCase() as ArticleStatus | undefined;
-  const normalizedLeague = league?.toUpperCase();
+  const normalizedLeague = league?.toUpperCase() as League | undefined;
 
   const [articles, leagues] = await Promise.all([
     prisma.article.findMany({
       where: {
         ...(normalizedStatus && { status: normalizedStatus }),
-        ...(normalizedLeague && { league: normalizedLeague as any }),
+        ...(normalizedLeague && { league: normalizedLeague }),
       },
       orderBy: { createdAt: "desc" },
     }),

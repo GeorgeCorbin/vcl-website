@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { League } from "@prisma/client";
+import type { League } from "@prisma/client";
 import { PollService } from "@/lib/services";
 import { LeaderboardAd, SidebarAds } from "@/components/ads";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
