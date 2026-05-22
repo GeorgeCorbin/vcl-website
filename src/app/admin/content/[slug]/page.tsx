@@ -80,9 +80,9 @@ export default async function EditContentPage({ params }: PageProps) {
         </div>
       </form>
 
-      <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-        <h3 className="mb-2 text-sm font-medium text-blue-800">HTML Tips</h3>
-        <ul className="space-y-1 text-sm text-blue-700">
+      <div className="rounded-sm border border-border bg-card p-4">
+        <h3 className="mb-2 text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">HTML Tips</h3>
+        <ul className="space-y-1 text-sm text-muted-foreground">
           <li>• Use &lt;h2&gt; and &lt;h3&gt; for section headings</li>
           <li>• Use &lt;p&gt; for paragraphs</li>
           <li>• Use &lt;ul&gt; and &lt;li&gt; for bullet lists</li>

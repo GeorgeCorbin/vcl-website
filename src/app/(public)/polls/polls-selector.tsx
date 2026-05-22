@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Label } from "@/components/ui/label";
 
 type League = {
   id: string;
@@ -70,64 +69,49 @@ export default function PollsSelector({
     : availableWeeks[0] ? `${availableWeeks[0].season}-${availableWeeks[0].weekNumber}` : "";
 
   return (
-    <div className="space-y-4">
-      {/* League Tabs */}
-      <div className="flex flex-wrap gap-2 rounded-2xl border border-border/50 bg-card p-2">
-        {leagues.map((league) => (
-          <button
-            key={league.id}
-            onClick={() => router.push(`/polls?league=${league.code}`)}
-            className={`rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
-              selectedLeague === league.code
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-muted"
-            }`}
-          >
-            {league.code}
-          </button>
-        ))}
-      </div>
+    <>
+      {/* League tab underline bar */}
+      {leagues.map((league) => (
+        <button
+          key={league.id}
+          onClick={() => router.push(`/polls?league=${league.code}`)}
+          className={`shrink-0 flex items-center justify-center h-12 px-8 text-[13px] border-b-2 transition-colors ${
+            selectedLeague === league.code
+              ? "border-vcl-gold text-vcl-gold font-bold"
+              : "border-transparent text-muted-foreground hover:text-foreground font-normal"
+          }`}
+        >
+          {league.code}
+        </button>
+      ))}
 
-      {/* Week and Division Selectors */}
-      <div className="flex flex-wrap gap-4">
-        <div className="flex-1 min-w-[200px] space-y-2">
-          <Label htmlFor="week" className="text-xs uppercase tracking-wider text-muted-foreground">
-            Week
-          </Label>
+      {/* Spacer then selectors */}
+      <div className="ml-auto flex items-center gap-3 py-2">
+        {availableDivisions.length > 1 && (
           <select
-            id="week"
+            value={selectedDivision || availableDivisions[0]}
+            onChange={(e) => handleDivisionChange(e.target.value)}
+            className="rounded-sm border border-border bg-card px-3 h-8 text-xs text-foreground"
+          >
+            {availableDivisions.map((d) => (
+              <option key={d} value={d}>{d}</option>
+            ))}
+          </select>
+        )}
+        {availableWeeks.length > 0 && (
+          <select
             value={defaultWeekValue}
             onChange={(e) => handleWeekChange(e.target.value)}
-            className="w-full rounded-lg border border-border/60 bg-background px-3 py-2 text-sm"
+            className="rounded-sm border border-border bg-card px-3 h-8 text-xs text-foreground"
           >
             {availableWeeks.map((w, index) => (
-              <option key={`${w.season}-${w.weekNumber}-${w.division || 'nodiv'}-${index}`} value={`${w.season}-${w.weekNumber}`}>
-                Week {w.weekNumber} - {w.season}
+              <option key={`${w.season}-${w.weekNumber}-${w.division || "nodiv"}-${index}`} value={`${w.season}-${w.weekNumber}`}>
+                Week {w.weekNumber} — {w.season}
               </option>
             ))}
           </select>
-        </div>
-
-        {availableDivisions.length > 1 && (
-          <div className="flex-1 min-w-[200px] space-y-2">
-            <Label htmlFor="division" className="text-xs uppercase tracking-wider text-muted-foreground">
-              Division
-            </Label>
-            <select
-              id="division"
-              value={selectedDivision || availableDivisions[0]}
-              onChange={(e) => handleDivisionChange(e.target.value)}
-              className="w-full rounded-lg border border-border/60 bg-background px-3 py-2 text-sm"
-            >
-              {availableDivisions.map((d) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
-              ))}
-            </select>
-          </div>
         )}
       </div>
-    </div>
+    </>
   );
 }

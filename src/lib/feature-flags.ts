@@ -4,6 +4,9 @@
  * When a flag is false the corresponding UI is hidden but all backend
  * code, DB models, and admin actions are preserved so the feature can
  * be re-enabled by setting the flag back to true.
+ * 
+ * false = off / hidden
+ * true = on / visible
  */
 export const FEATURES = {
   /** Media polls/rankings — public routes/nav and admin polls section */

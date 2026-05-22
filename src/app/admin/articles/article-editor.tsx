@@ -38,6 +38,25 @@ const statuses: { label: string; value: ArticleStatus }[] = [
   { label: "Archived", value: "ARCHIVED" },
 ];
 
+const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
+const MAX_ARTICLE_PAYLOAD_BYTES = 20 * 1024 * 1024;
+
+function formatMegabytes(bytes: number) {
+  return `${Math.round(bytes / (1024 * 1024))} MB`;
+}
+
+function getSaveErrorMessage(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+  if (message.includes("Body exceeded") || message.includes("413")) {
+    return "This article is too large to save. Upload images separately using the image uploader instead of embedding them in the content.";
+  }
+  return message || "Failed to save article. Please try again.";
+}
+
+function estimateArticlePayloadSize(fields: Record<string, string>) {
+  return new Blob(Object.values(fields)).size;
+}
+
 export function ArticleEditor({ mode, article, initialImages, leagues, formAction, deleteSlot }: ArticleEditorProps) {
   const [title, setTitle] = useState(article?.title ?? "");
   const [slug, setSlug] = useState(article?.slug ?? "");
@@ -54,6 +73,8 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
   const [showPreview, setShowPreview] = useState(false);
   const [images, setImages] = useState(initialImages);
   const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverError, setCoverError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -103,6 +124,11 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      setUploadError(`Images must be ${formatMegabytes(MAX_FILE_SIZE_BYTES)} or smaller.`);
+      event.target.value = "";
+      return;
+    }
     setIsUploading(true);
     setUploadError(null);
     try {
@@ -115,7 +141,7 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
         setImages((prev) => [result.path!, ...prev]);
       }
     } catch (error) {
-      setUploadError(error instanceof Error ? error.message : "Failed to upload image");
+      setUploadError(getSaveErrorMessage(error));
     } finally {
       setIsUploading(false);
       if (event.target) event.target.value = "";
@@ -125,56 +151,105 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
   const handleCoverChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    setCoverError(null);
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      setCoverError(`Cover image must be ${formatMegabytes(MAX_FILE_SIZE_BYTES)} or smaller.`);
+      event.target.value = "";
+      return;
+    }
     setCoverFile(file);
     const previewUrl = URL.createObjectURL(file);
     setCoverPreview(previewUrl);
   };
 
   const handleSubmit = (formData: FormData) => {
-    formData.set("title", title);
-    formData.set("slug", slug);
-    formData.set("excerpt", excerpt);
-    formData.set("content", content);
-    formData.set("status", selectedStatus);
-    formData.set("featured", featured ? "on" : "");
-    formData.set("author", author);
-    formData.set("league", league);
-    if (publishDate) {
-      formData.set("publishedAt", new Date(publishDate).toISOString());
-    }
-    if (coverFile) {
-      formData.set("coverImage", coverFile);
-    }
-    if (article?.coverImage) {
-      formData.set("coverImageCurrent", article.coverImage);
-    }
-
+    setSubmitError(null);
     startTransition(async () => {
-      await formAction(formData);
+      try {
+        let coverPath = "";
+        if (coverPreview) {
+          if (coverFile) {
+            const uploadFormData = new FormData();
+            uploadFormData.append("file", coverFile);
+            const result = await uploadImageAction(uploadFormData);
+            if (result.error) {
+              setSubmitError(result.error);
+              return;
+            }
+            coverPath = result.path ?? "";
+          } else if (coverPreview.startsWith("/")) {
+            coverPath = coverPreview;
+          } else {
+            coverPath = article?.coverImage ?? "";
+          }
+        }
+
+        formData.delete("coverImageFile");
+        formData.delete("coverImage");
+        formData.delete("images");
+        formData.set("title", title);
+        formData.set("slug", slug);
+        formData.set("excerpt", excerpt);
+        formData.set("content", content);
+        formData.set("status", selectedStatus);
+        formData.set("featured", featured ? "on" : "");
+        formData.set("author", author);
+        formData.set("league", league);
+        formData.set("coverImageCurrent", coverPath);
+        if (publishDate) {
+          formData.set("publishedAt", new Date(publishDate).toISOString());
+        }
+
+        const payloadSize = estimateArticlePayloadSize({
+          title,
+          slug,
+          excerpt,
+          content,
+          author,
+          league,
+          coverPath,
+        });
+        if (payloadSize > MAX_ARTICLE_PAYLOAD_BYTES) {
+          setSubmitError(
+            `Article content is too large (${formatMegabytes(payloadSize)}). Keep it under ${formatMegabytes(MAX_ARTICLE_PAYLOAD_BYTES)} or remove embedded images from the body.`
+          );
+          return;
+        }
+
+        await formAction(formData);
+      } catch (error) {
+        setSubmitError(getSaveErrorMessage(error));
+      }
     });
   };
 
   return (
     <div className="space-y-8">
-      <div>
-        <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">
-          {mode === "create" ? "Create article" : "Edit article"}
-        </p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight">{mode === "create" ? "New Article" : "Update Article"}</h1>
-        <div className="mt-4">
-          <Button type="button" variant="outline" onClick={() => setShowPreview(!showPreview)}>
-            <Eye className="mr-2 h-4 w-4" />
-            {showPreview ? "Hide Preview" : "Show Preview"}
-          </Button>
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-border pb-6">
+        <div>
+          <h1 className="font-heading text-4xl tracking-wide text-foreground">
+            {mode === "create" ? "New Article" : "Edit Article"}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {mode === "create" ? "Draft — unsaved" : "Draft — edit and save changes"}
+          </p>
         </div>
+        <button
+          type="button"
+          onClick={() => setShowPreview(!showPreview)}
+          className="inline-flex items-center gap-2 rounded-sm border border-border px-4 h-9 text-xs font-semibold text-muted-foreground hover:border-vcl-gold/40 hover:text-vcl-gold transition-colors shrink-0"
+        >
+          <Eye className="h-3.5 w-3.5" />
+          {showPreview ? "Hide Preview" : "Preview"}
+        </button>
       </div>
 
       {showPreview && (
-        <section className="rounded-3xl border border-border/50 bg-card p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold">Article Preview</h2>
-          <div className="prose prose-lg max-w-none dark:prose-invert">
+        <section className="rounded-sm border border-border bg-card p-6">
+          <h2 className="mb-4 text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">Article Preview</h2>
+          <div className="prose prose-invert max-w-none">
             {coverPreview && (
-              <div className="relative mb-6 aspect-video w-full overflow-hidden rounded-xl">
+              <div className="relative mb-6 aspect-video w-full overflow-hidden rounded-sm">
                 <Image src={coverPreview} alt="Cover" fill className="object-cover" sizes="800px" />
               </div>
             )}
@@ -189,7 +264,7 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
         {article?.id && <input type="hidden" name="id" value={article.id} />}
         <input type="hidden" name="coverImageCurrent" value={article?.coverImage ?? ""} />
 
-        <section className="rounded-3xl border border-border/50 bg-card p-6 shadow-sm space-y-6">
+        <section className="rounded-sm border border-border bg-card p-6 space-y-6">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="title">Title</Label>
@@ -210,7 +285,7 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
             <Label htmlFor="content" className="flex items-center gap-2">
               Content <Type className="h-4 w-4 text-muted-foreground" />
             </Label>
-            <div className="flex flex-wrap gap-2 rounded-t-xl border border-border/60 bg-muted/40 px-3 py-2 text-sm">
+            <div className="flex flex-wrap gap-1.5 rounded-t-sm border border-border bg-secondary px-3 py-2">
               <ToolbarButton onClick={() => insertTag("<strong>", "</strong>")}>Bold</ToolbarButton>
               <ToolbarButton onClick={() => insertTag("<em>", "</em>")}>Italic</ToolbarButton>
               <ToolbarButton onClick={() => insertTag("<u>", "</u>")}>Underline</ToolbarButton>
@@ -245,7 +320,7 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
           </div>
         </section>
 
-        <section className="rounded-3xl border border-border/50 bg-card p-6 shadow-sm space-y-6">
+        <section className="rounded-sm border border-border bg-card p-6 space-y-6">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
@@ -315,57 +390,60 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
           </div>
         </section>
 
-        <section className="rounded-3xl border border-border/50 bg-card p-6 shadow-sm space-y-4">
+        <section className="rounded-sm border border-border bg-card p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <ImageIcon className="h-5 w-5" /> Cover Image
+              <h3 className="text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase flex items-center gap-2">
+                <ImageIcon className="h-3.5 w-3.5" /> Cover Image
               </h3>
-              <p className="text-sm text-muted-foreground">Featured image displayed at the top of the article.</p>
+              <p className="text-sm text-muted-foreground mt-1">Featured image displayed at the top of the article.</p>
             </div>
-            <label className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-border/60 px-3 py-1.5 text-sm font-medium hover:bg-muted/40">
+            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-sm border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:border-vcl-gold/40 hover:text-vcl-gold transition-colors">
               {coverPreview ? "Change" : "Upload"}
               <input type="file" name="coverImageFile" accept="image/*" className="hidden" onChange={handleCoverChange} />
             </label>
           </div>
           {coverPreview ? (
-            <div className="relative aspect-video w-full max-w-md overflow-hidden rounded-xl border border-border/50">
+            <div className="relative aspect-video w-full max-w-md overflow-hidden rounded-sm border border-border">
               <Image src={coverPreview} alt="Cover preview" fill className="object-cover" sizes="400px" />
               <button
                 type="button"
-                onClick={() => { setCoverPreview(""); setCoverFile(null); }}
-                className="absolute right-2 top-2 rounded-full bg-black/50 p-1 text-white hover:bg-black/70"
+                onClick={() => { setCoverPreview(""); setCoverFile(null); setCoverError(null); }}
+                className="absolute right-2 top-2 rounded-sm bg-black/60 px-2 py-1 text-xs text-white hover:bg-black/80"
               >
-                ✕
+                Remove
               </button>
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">No cover image set.</p>
           )}
+          {coverError && <p className="text-sm text-red-400">{coverError}</p>}
         </section>
 
-        <section className="rounded-3xl border border-border/50 bg-card p-6 shadow-sm space-y-4">
+        <section className="rounded-sm border border-border bg-card p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold">Content Images</h3>
-              <p className="text-sm text-muted-foreground">Upload assets to embed in the article body.</p>
+              <h3 className="text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">Content Images</h3>
+              <p className="text-sm text-muted-foreground mt-1">Upload assets to embed in the article body.</p>
             </div>
-            <label className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-border/60 px-3 py-1.5 text-sm font-medium hover:bg-muted/40">
-              {isUploading ? "Uploading..." : "Upload"}
+            <label className={`inline-flex cursor-pointer items-center gap-1.5 rounded-sm border border-border px-3 py-1.5 text-xs font-semibold transition-colors ${
+              isUploading ? "text-muted-foreground opacity-50 cursor-not-allowed" : "text-muted-foreground hover:border-vcl-gold/40 hover:text-vcl-gold"
+            }`}>
+              {isUploading ? "Uploading..." : "Upload Image"}
               <input type="file" name="images" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={isUploading} />
             </label>
           </div>
-          {uploadError && <p className="text-sm text-red-500">{uploadError}</p>}
+          {uploadError && <p className="text-sm text-red-400">{uploadError}</p>}
           {images.length === 0 ? (
             <p className="text-sm text-muted-foreground">No uploads yet.</p>
           ) : (
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-3 md:grid-cols-3">
               {images.map((image) => (
                 <button
                   key={image}
                   type="button"
-                  onClick={() => insertAtCursor(`<img src="${image}" alt="" class="rounded-lg w-full" />`)}
-                  className="relative aspect-video overflow-hidden rounded-xl border border-border/50"
+                  onClick={() => insertAtCursor(`<img src="${image}" alt="" class="rounded-sm w-full" />`)}
+                  className="relative aspect-video overflow-hidden rounded-sm border border-border hover:border-vcl-gold/40 transition-colors"
                 >
                   <Image src={image} alt="" fill sizes="200px" className="object-cover" />
                 </button>
@@ -374,28 +452,41 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
           )}
         </section>
 
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          {deleteSlot}
-          <div className="flex w-full flex-col gap-3 md:w-auto md:flex-row">
-            <Button
+        {submitError && (
+          <div className="rounded-sm border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+            {submitError}
+          </div>
+        )}
+
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between pt-2">
+          <div>{deleteSlot}</div>
+          <div className="flex items-center gap-3">
+            <button
               type="button"
-              variant="outline"
               onClick={() => {
                 setTitle(article?.title ?? "");
                 setSlug(article?.slug ?? "");
                 setExcerpt(article?.excerpt ?? "");
                 setContent(article?.content ?? "");
                 setCoverPreview(article?.coverImage ?? "");
+                setCoverFile(null);
+                setCoverError(null);
+                setSubmitError(null);
                 setSelectedStatus(article?.status ?? "DRAFT");
                 setFeatured(article?.featured ?? false);
                 setAuthor(article?.author ?? "");
               }}
+              className="inline-flex items-center gap-1.5 rounded-sm border border-border px-4 h-10 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
             >
               Reset
-            </Button>
-            <Button type="submit" disabled={isPending}>
+            </button>
+            <button
+              type="submit"
+              disabled={isPending}
+              className="inline-flex items-center gap-1.5 rounded-sm bg-vcl-gold px-5 h-10 text-sm font-bold text-vcl-gold-foreground hover:bg-vcl-gold/90 transition-colors disabled:opacity-60"
+            >
               {isPending ? "Saving..." : mode === "create" ? "Publish Article" : "Save Changes"}
-            </Button>
+            </button>
           </div>
         </div>
       </form>
@@ -408,7 +499,7 @@ function ToolbarButton({ children, onClick }: { children: React.ReactNode; onCli
     <button
       type="button"
       onClick={onClick}
-      className="rounded-md border border-border/70 bg-background px-2 py-1 text-xs font-semibold transition hover:bg-muted"
+      className="rounded-sm border border-border bg-card px-2 py-1 text-xs font-semibold text-muted-foreground transition hover:border-vcl-gold/40 hover:text-foreground"
     >
       {children}
     </button>

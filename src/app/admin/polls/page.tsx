@@ -4,16 +4,6 @@ import { format } from "date-fns";
 import { Plus, Pencil, Trash2, Eye } from "lucide-react";
 import prisma from "@/lib/db";
 import { League, PollStatus } from "@prisma/client";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { deletePollWeek } from "./actions";
 import { getActiveLeagues } from "@/lib/league-config";
 import { FEATURES } from "@/lib/feature-flags";
@@ -56,157 +46,113 @@ export default async function PollsPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      {/* Header */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-border pb-6">
         <div>
-          <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Rankings</p>
-          <h1 className="text-3xl font-bold tracking-tight">Media Polls</h1>
-          <p className="text-muted-foreground">Manage weekly media poll rankings across all leagues.</p>
+          <h1 className="font-heading text-4xl tracking-wide text-foreground">Media Polls</h1>
+          <p className="text-sm text-muted-foreground mt-1">Manage weekly media poll rankings across all leagues.</p>
         </div>
-        <Link href="/admin/polls/new">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            New Poll Week
-          </Button>
+        <Link
+          href="/admin/polls/new"
+          className="inline-flex items-center gap-2 rounded-sm bg-vcl-gold px-5 h-10 text-sm font-bold text-vcl-gold-foreground hover:bg-vcl-gold/90 transition-colors shrink-0"
+        >
+          <Plus className="h-4 w-4" />
+          New Poll Week
         </Link>
       </div>
 
-      <div className="flex flex-wrap gap-2 rounded-2xl border border-border/50 bg-card p-2">
-        <Link
-          href={`/admin/polls${normalizedStatus ? `?status=${normalizedStatus}` : ""}`}
-          className={`rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
-            !normalizedLeague
-              ? "bg-primary text-primary-foreground"
-              : "text-muted-foreground hover:bg-muted"
-          }`}
-        >
-          All
-        </Link>
-        {leagues.map((league) => (
-          <Link
-            key={league.id}
-            href={`/admin/polls?league=${league.code}${normalizedStatus ? `&status=${normalizedStatus}` : ""}`}
-            className={`rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
-              normalizedLeague === league.code
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-muted"
-            }`}
-          >
-            {league.code}
-          </Link>
+      {/* Stat cards */}
+      <div className="grid gap-4 grid-cols-3">
+        {[
+          { label: "Published Polls", value: polls.filter(p => p.status === "PUBLISHED").length },
+          { label: "Draft Polls", value: polls.filter(p => p.status === "DRAFT").length, gold: true },
+          { label: "Current Week", value: polls[0]?.weekNumber ?? "—" },
+        ].map((s) => (
+          <div key={s.label} className="rounded-sm border border-border bg-card p-5">
+            <p className="text-xs text-muted-foreground mb-2">{s.label}</p>
+            <p className={`font-heading text-4xl ${s.gold ? "text-vcl-gold" : "text-foreground"}`}>{s.value}</p>
+          </div>
         ))}
       </div>
 
-      <div className="flex items-center gap-4">
-        <form className="flex items-center gap-3">
+      {/* Filters */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <Link
+            href={`/admin/polls${normalizedStatus ? `?status=${normalizedStatus}` : ""}`}
+            className={`rounded-sm px-3 h-8 flex items-center text-xs font-semibold transition-colors ${!normalizedLeague ? "bg-vcl-gold text-vcl-gold-foreground" : "border border-border text-muted-foreground hover:text-foreground"}`}
+          >All Leagues</Link>
+          {leagues.map((lg) => (
+            <Link
+              key={lg.id}
+              href={`/admin/polls?league=${lg.code}${normalizedStatus ? `&status=${normalizedStatus}` : ""}`}
+              className={`rounded-sm px-3 h-8 flex items-center text-xs font-semibold transition-colors ${normalizedLeague === lg.code ? "bg-vcl-gold text-vcl-gold-foreground" : "border border-border text-muted-foreground hover:text-foreground"}`}
+            >{lg.code}</Link>
+          ))}
+        </div>
+        <form className="flex items-center gap-2">
           {normalizedLeague && <input type="hidden" name="league" value={normalizedLeague} />}
-          <label className="flex items-center gap-2 text-sm">
-            <span className="text-muted-foreground">Status:</span>
-            <select name="status" defaultValue={normalizedStatus ?? ""} className="rounded-lg border border-border/60 bg-background px-3 py-2">
-              {statuses.map((s) => (
-                <option key={s.label} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <span className="text-muted-foreground">Division:</span>
-            <select name="division" defaultValue={normalizedDivision ?? ""} className="rounded-lg border border-border/60 bg-background px-3 py-2">
-              <option value="">All Divisions</option>
-              <option value="Division 1">Division 1</option>
-              <option value="Division 2">Division 2</option>
-              <option value="Division 3">Division 3</option>
-            </select>
-          </label>
-          <Button type="submit" variant="secondary" size="sm">
-            Filter
-          </Button>
+          <select name="status" defaultValue={normalizedStatus ?? ""} className="rounded-sm border border-border bg-card px-3 h-8 text-xs text-foreground">
+            {statuses.map((s) => <option key={s.label} value={s.value}>{s.label}</option>)}
+          </select>
+          <select name="division" defaultValue={normalizedDivision ?? ""} className="rounded-sm border border-border bg-card px-3 h-8 text-xs text-foreground">
+            <option value="">All Divisions</option>
+            <option value="Division 1">Division 1</option>
+            <option value="Division 2">Division 2</option>
+            <option value="Division 3">Division 3</option>
+          </select>
+          <button type="submit" className="rounded-sm border border-border px-3 h-8 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors">Filter</button>
+          {(normalizedLeague || normalizedStatus || normalizedDivision) && (
+            <Link href="/admin/polls" className="text-xs text-muted-foreground hover:text-foreground">Reset</Link>
+          )}
         </form>
-        {(normalizedLeague || normalizedStatus || normalizedDivision) && (
-          <Link href="/admin/polls" className="text-sm text-muted-foreground hover:text-foreground">
-            Reset filters
-          </Link>
-        )}
       </div>
 
-      <div className="rounded-3xl border border-border/50 bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Week</TableHead>
-              <TableHead>Season</TableHead>
-              <TableHead>League</TableHead>
-              <TableHead>Division</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Teams</TableHead>
-              <TableHead>Published</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {polls.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
-                  No polls found. Try another filter or create your first poll.
-                </TableCell>
-              </TableRow>
-            ) : (
-              polls.map((poll) => (
-                <TableRow key={poll.id}>
-                  <TableCell className="font-medium">Week {poll.weekNumber}</TableCell>
-                  <TableCell>{poll.season}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="uppercase">
-                      {poll.league}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {poll.division ? (
-                      <Badge variant="secondary">{poll.division}</Badge>
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={poll.status === "PUBLISHED" ? "default" : "secondary"}>
-                      {poll.status.toLowerCase()}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{poll.entries.length}</TableCell>
-                  <TableCell>
-                    {poll.publishedAt ? format(poll.publishedAt, "MMM d, yyyy") : "—"}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Link href={`/polls/${poll.league.toLowerCase()}/${poll.season}/${poll.weekNumber}`}>
-                        <Button variant="ghost" size="icon">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                      <Link href={`/admin/polls/${poll.id}`}>
-                        <Button variant="ghost" size="icon">
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                      <form action={deletePollWeek}>
-                        <input type="hidden" name="id" value={poll.id} />
-                        <Button
-                          type="submit"
-                          variant="ghost"
-                          size="icon"
-                          className="text-red-500 hover:text-red-600"
-                          aria-label={`Delete poll week ${poll.weekNumber}`}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </form>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+      {/* Table */}
+      <div className="rounded-sm border border-border bg-card overflow-hidden">
+        <div className="hidden lg:grid grid-cols-[80px_100px_120px_140px_120px_140px_1fr] items-center h-11 px-5 bg-secondary border-b border-border">
+          {["Week","Season","League","Teams Ranked","Status","Created","Actions"].map((h) => (
+            <span key={h} className="text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">{h}</span>
+          ))}
+        </div>
+        {polls.length === 0 ? (
+          <div className="py-16 text-center text-sm text-muted-foreground">No polls found. Try another filter or create your first poll.</div>
+        ) : (
+          <div className="divide-y divide-border">
+            {polls.map((poll) => (
+              <div key={poll.id} className="grid grid-cols-1 lg:grid-cols-[80px_100px_120px_140px_120px_140px_1fr] items-center min-h-[52px] px-5 py-3 lg:py-0 hover:bg-accent transition-colors">
+                <span className="text-sm font-semibold text-foreground">Wk {poll.weekNumber}</span>
+                <span className="text-sm text-muted-foreground">{poll.season}</span>
+                <span className="hidden lg:block">
+                  <span className="rounded-sm bg-vcl-gold px-2 py-0.5 text-[10px] font-bold tracking-widest text-vcl-gold-foreground uppercase">{poll.league}</span>
+                </span>
+                <span className="hidden lg:block text-sm text-muted-foreground">{poll.entries.length}</span>
+                <span className="hidden lg:block">
+                  <span className={`rounded-sm px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase ${poll.status === "PUBLISHED" ? "bg-vcl-gold text-vcl-gold-foreground" : "border border-border text-muted-foreground"}`}>
+                    {poll.status}
+                  </span>
+                </span>
+                <span className="hidden lg:block text-xs text-muted-foreground">
+                  {poll.publishedAt ? format(poll.publishedAt, "MMM d, yyyy") : "—"}
+                </span>
+                <div className="flex items-center gap-2 mt-2 lg:mt-0">
+                  <Link href={`/polls/${poll.league.toLowerCase()}/${poll.season}/${poll.weekNumber}`} className="inline-flex items-center gap-1.5 rounded-sm border border-border px-2.5 py-1.5 text-xs font-semibold text-muted-foreground hover:border-vcl-gold/40 hover:text-vcl-gold transition-colors">
+                    <Eye className="h-3 w-3" /> View
+                  </Link>
+                  <Link href={`/admin/polls/${poll.id}`} className="inline-flex items-center gap-1.5 rounded-sm border border-border px-2.5 py-1.5 text-xs font-semibold text-muted-foreground hover:border-vcl-gold/40 hover:text-vcl-gold transition-colors">
+                    <Pencil className="h-3 w-3" /> Edit
+                  </Link>
+                  <form action={deletePollWeek}>
+                    <input type="hidden" name="id" value={poll.id} />
+                    <button type="submit" className="inline-flex items-center gap-1.5 rounded-sm border border-border px-2.5 py-1.5 text-xs font-semibold text-muted-foreground hover:border-red-500/40 hover:text-red-400 transition-colors">
+                      <Trash2 className="h-3 w-3" /> Delete
+                    </button>
+                  </form>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,5 +1,3 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
 const availableLeagues = [
   { code: "MCLA", name: "Men's Collegiate Lacrosse Association", active: true },
@@ -11,77 +9,62 @@ const availableLeagues = [
 
 export default function SettingsPage() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground">
-          Manage your site settings and integrations.
-        </p>
+    <div className="space-y-8">
+      <div className="border-b border-border pb-6">
+        <h1 className="font-heading text-4xl tracking-wide text-foreground">Settings</h1>
+        <p className="text-sm text-muted-foreground mt-1">Manage your site settings and integrations.</p>
       </div>
 
-      <div className="grid gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>MCLA API Integration</CardTitle>
-            <CardDescription>
-              Connect to the MCLA API to automatically sync team and game data.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">Status</p>
-                <p className="text-sm text-muted-foreground">
-                  API integration not configured
-                </p>
-              </div>
-              <Badge variant="secondary">Not Connected</Badge>
+      <div className="flex flex-col gap-4">
+        {/* MCLA API */}
+        <div className="rounded-sm border border-border bg-card p-6">
+          <div className="mb-4">
+            <h2 className="text-sm font-semibold text-foreground">MCLA API Integration</h2>
+            <p className="text-xs text-muted-foreground mt-1">Connect to the MCLA API to automatically sync team and game data.</p>
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-foreground">Status</p>
+              <p className="text-xs text-muted-foreground">API integration not configured</p>
             </div>
-          </CardContent>
-        </Card>
+            <span className="rounded-sm border border-border px-2 py-0.5 text-[10px] font-bold tracking-widest text-muted-foreground uppercase">Not Connected</span>
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Site Information</CardTitle>
-            <CardDescription>
-              Basic information about your site.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <p className="text-sm font-medium">Site Name</p>
-              <p className="text-sm text-muted-foreground">VCL - Varsity Club Lacrosse</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium">Tagline</p>
-              <p className="text-sm text-muted-foreground">Strictly Club. Strictly Business.</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium">Version</p>
-              <p className="text-sm text-muted-foreground">1.0.0</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Database</CardTitle>
-            <CardDescription>
-              Database connection and status.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">PostgreSQL</p>
-                <p className="text-sm text-muted-foreground">
-                  Managed by Prisma ORM
-                </p>
+        {/* Site Info */}
+        <div className="rounded-sm border border-border bg-card p-6">
+          <div className="mb-4">
+            <h2 className="text-sm font-semibold text-foreground">Site Information</h2>
+            <p className="text-xs text-muted-foreground mt-1">Basic information about your site.</p>
+          </div>
+          <div className="flex flex-col divide-y divide-border">
+            {[
+              { label: "Site Name", value: "VCL — Varsity Club Lacrosse" },
+              { label: "Tagline", value: "Strictly Club. Strictly Business." },
+              { label: "Version", value: "1.0.0" },
+            ].map((row) => (
+              <div key={row.label} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
+                <span className="text-xs text-muted-foreground">{row.label}</span>
+                <span className="text-sm text-foreground">{row.value}</span>
               </div>
-              <Badge>Connected</Badge>
+            ))}
+          </div>
+        </div>
+
+        {/* Database */}
+        <div className="rounded-sm border border-border bg-card p-6">
+          <div className="mb-4">
+            <h2 className="text-sm font-semibold text-foreground">Database</h2>
+            <p className="text-xs text-muted-foreground mt-1">Database connection and status.</p>
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-foreground">PostgreSQL</p>
+              <p className="text-xs text-muted-foreground">Managed by Prisma ORM</p>
             </div>
-          </CardContent>
-        </Card>
+            <span className="rounded-sm bg-vcl-gold px-2 py-0.5 text-[10px] font-bold tracking-widest text-vcl-gold-foreground uppercase">Connected</span>
+          </div>
+        </div>
       </div>
     </div>
   );

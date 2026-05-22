@@ -1,5 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Image from "next/image";
+import Link from "next/link";
 import { FEATURES } from "@/lib/feature-flags";
 
 function missionFocusText() {
@@ -13,135 +12,113 @@ function missionFocusText() {
 
 export default function AboutPage() {
   return (
-    <div className="container mx-auto px-4 py-12 md:px-6 md:py-16">
-      <div className="max-w-3xl mx-auto">
-        <div className="flex items-center gap-4 mb-6">
-          <Image
-            src="/vcl_logo3.png"
-            alt="Varsity Club Lacrosse"
-            width={64}
-            height={64}
-            className="h-16 w-auto"
-          />
-          <div>
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight">
-              About Varsity Club Lacrosse
-            </h1>
-            <p className="text-sm text-vcl-gold font-medium">Strictly Club. Strictly Business.</p>
-          </div>
+    <div className="flex flex-col">
+      {/* ── Page header ── */}
+      <div className="border-b border-border bg-secondary">
+        <div className="mx-auto max-w-[1440px] px-6 py-10 md:px-12 md:py-14">
+          <nav className="flex items-center gap-2 text-xs text-muted-foreground mb-5">
+            <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
+            <span>/</span>
+            <span className="text-foreground">About</span>
+          </nav>
+          <h1 className="font-heading text-6xl lg:text-7xl tracking-tight text-foreground">ABOUT VCL</h1>
+          <p className="mt-3 text-vcl-gold text-sm font-semibold tracking-wide">Strictly Club. Strictly Business.</p>
         </div>
-        <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
-          Your source for comprehensive club lacrosse coverage.
-        </p>
+      </div>
 
-        <div className="mt-10 space-y-10">
+      {/* ── Content ── */}
+      <div className="mx-auto w-full max-w-[1440px] px-6 py-12 md:px-12 md:py-16">
+        <div className="max-w-3xl flex flex-col gap-14">
+
+          {/* Mission */}
           <section>
-            <h2 className="text-xl md:text-2xl font-semibold mb-4">Our Mission</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              Varsity Club Lacrosse is dedicated to providing in-depth coverage of club lacrosse. 
-              While our primary focus is on the Men&apos;s Collegiate Lacrosse Association (MCLA), 
+            <h2 className="font-heading text-3xl tracking-wide text-foreground mb-5">OUR MISSION</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Varsity Club Lacrosse is dedicated to providing in-depth coverage of club lacrosse.
+              While our primary focus is on the Men&apos;s Collegiate Lacrosse Association (MCLA),
               we also cover SMLL, NCLL, WCLL, and other club leagues. We aim to be the go-to
               destination for {missionFocusText()} for the club lacrosse community.
             </p>
           </section>
 
+          {/* What we cover */}
           <section>
-            <h2 className="text-xl md:text-2xl font-semibold mb-4">What We Cover</h2>
+            <h2 className="font-heading text-3xl tracking-wide text-foreground mb-6">WHAT WE COVER</h2>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Card className="border-border/50">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base md:text-lg">Articles & Analysis</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    Game recaps, team previews, player spotlights, and in-depth
-                    analysis of the club lacrosse landscape.
-                  </p>
-                </CardContent>
-              </Card>
+              <div className="rounded-sm border border-border bg-card p-5">
+                <h3 className="text-sm font-semibold text-foreground mb-2">Articles &amp; Analysis</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Game recaps, team previews, player spotlights, and in-depth analysis of the club lacrosse landscape.
+                </p>
+              </div>
 
               {FEATURES.MEDIA_POLLS && (
-                <Card className="border-border/50">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base md:text-lg">Weekly Media Poll</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      Comprehensive weekly rankings of the top 25 teams in MCLA
-                      Division I and Division II.
-                    </p>
-                  </CardContent>
-                </Card>
+                <div className="rounded-sm border border-border bg-card p-5">
+                  <h3 className="text-sm font-semibold text-foreground mb-2">Weekly Media Poll</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Comprehensive weekly rankings of the top teams across MCLA, SMLL, NCLL, and WCLL.
+                  </p>
+                </div>
               )}
 
               {FEATURES.TRANSFERS && (
-                <Card className="border-border/50">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base md:text-lg">Transfer Tracker</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      Stay updated on player movements between programs throughout
-                      the offseason and beyond.
-                    </p>
-                  </CardContent>
-                </Card>
+                <div className="rounded-sm border border-border bg-card p-5">
+                  <h3 className="text-sm font-semibold text-foreground mb-2">Transfer Tracker</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Stay updated on player movements between programs throughout the offseason and beyond.
+                  </p>
+                </div>
               )}
 
-              <Card className="border-border/50">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base md:text-lg">League Coverage</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    Coverage of MCLA, SMLL, NCLL, WCLL and other club leagues
-                    across all conferences and divisions.
-                  </p>
-                </CardContent>
-              </Card>
+              <div className="rounded-sm border border-border bg-card p-5">
+                <h3 className="text-sm font-semibold text-foreground mb-2">League Coverage</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Coverage of MCLA, SMLL, NCLL, WCLL and other club leagues across all conferences and divisions.
+                </p>
+              </div>
             </div>
           </section>
 
+          {/* Contact */}
           <section>
-            <h2 className="text-xl md:text-2xl font-semibold mb-4">Contact Us</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              Have a tip, story idea, or want to get involved? Reach out to us on
-              social media.
+            <h2 className="font-heading text-3xl tracking-wide text-foreground mb-5">CONTACT US</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed mb-6">
+              Have a tip, story idea, or want to get involved? Reach out to us on social media.
             </p>
-            <div className="mt-4 space-y-3 text-sm">
-              <p>
-                <strong>Instagram:</strong>{" "}
+            <div className="flex flex-col gap-3">
+              <div className="rounded-sm border border-border bg-card p-4 flex items-center justify-between">
+                <span className="text-sm font-semibold text-foreground">Instagram</span>
                 <a
                   href="https://www.instagram.com/varsityclublacrosse/"
-                  className="text-vcl-gold hover:underline"
+                  className="text-sm text-vcl-gold hover:underline"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
                   @varsityclublacrosse
                 </a>
-              </p>
-              <p>
-                <strong>X / Twitter:</strong>{" "}
+              </div>
+              <div className="rounded-sm border border-border bg-card p-4 flex items-center justify-between">
+                <span className="text-sm font-semibold text-foreground">X / Twitter</span>
                 <a
                   href="https://x.com/VarsityLacrosse"
-                  className="text-vcl-gold hover:underline"
+                  className="text-sm text-vcl-gold hover:underline"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
                   @VarsityLacrosse
                 </a>
-              </p>
-              <p>
-                <strong>YouTube:</strong>{" "}
+              </div>
+              <div className="rounded-sm border border-border bg-card p-4 flex items-center justify-between">
+                <span className="text-sm font-semibold text-foreground">YouTube</span>
                 <a
                   href="https://www.youtube.com/channel/UCCaeRbVrXas2w-Fiu4ZnwTA"
-                  className="text-vcl-gold hover:underline"
+                  className="text-sm text-vcl-gold hover:underline"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
                   Varsity Club Lacrosse
                 </a>
-              </p>
+              </div>
             </div>
           </section>
         </div>

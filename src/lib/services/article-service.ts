@@ -20,16 +20,26 @@ export class ArticleService {
     status?: ArticleStatus;
     featured?: boolean;
     tagSlug?: string;
+    league?: string | League | null;
+    search?: string;
     limit?: number;
     offset?: number;
   }) {
-    const { status, featured, tagSlug, limit = 20, offset = 0 } = options || {};
+    const { status, featured, tagSlug, league, search, limit = 20, offset = 0 } = options || {};
+    const normalizedLeague = normalizeLeague(league);
 
     return prisma.article.findMany({
       where: {
         ...(status && { status }),
         ...(featured !== undefined && { featured }),
         ...(tagSlug && { tags: { some: { slug: tagSlug } } }),
+        ...(normalizedLeague && { league: normalizedLeague }),
+        ...(search && {
+          OR: [
+            { title: { contains: search, mode: "insensitive" } },
+            { excerpt: { contains: search, mode: "insensitive" } },
+          ],
+        }),
       },
       include: {
         tags: true,

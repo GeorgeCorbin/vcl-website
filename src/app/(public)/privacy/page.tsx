@@ -49,30 +49,39 @@ const sections = [
 
 export default function PrivacyPage() {
   return (
-    <main className="bg-background">
-      <div className="container mx-auto max-w-4xl px-4 py-16 md:px-6 md:py-24">
-        <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Policies</p>
-        <h1 className="mt-3 text-4xl font-bold tracking-tight md:text-5xl">Privacy Policy</h1>
-        <p className="mt-4 text-base text-muted-foreground md:text-lg">
-          Effective date: {new Date().getFullYear()} &mdash; Varsity Club Lacrosse (&ldquo;VCL&rdquo;). We collect the minimum
-          information needed to run a high-quality club lacrosse publication and protect our community.
-        </p>
+    <div className="flex flex-col">
+      {/* Page header */}
+      <div className="border-b border-border bg-secondary">
+        <div className="mx-auto max-w-[1440px] px-6 py-10 md:px-12 md:py-14">
+          <nav className="flex items-center gap-2 text-xs text-muted-foreground mb-5">
+            <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
+            <span>/</span>
+            <span className="text-foreground">Privacy Policy</span>
+          </nav>
+          <p className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase mb-2">Policies</p>
+          <h1 className="font-heading text-6xl lg:text-7xl tracking-tight text-foreground">PRIVACY POLICY</h1>
+          <p className="mt-3 text-sm text-muted-foreground max-w-2xl leading-relaxed">
+            Effective {new Date().getFullYear()} &mdash; Varsity Club Lacrosse (&ldquo;VCL&rdquo;). We collect the minimum
+            information needed to run a high-quality club lacrosse publication and protect our community.
+          </p>
+        </div>
+      </div>
 
-        <div className="mt-10 space-y-10">
+      {/* Content */}
+      <div className="mx-auto w-full max-w-[1440px] px-6 py-12 md:px-12 md:py-16">
+        <div className="max-w-3xl flex flex-col gap-5">
           {sections.map((section) => (
-            <section key={section.title} className="rounded-3xl border border-border/50 bg-card px-6 py-6 shadow-sm md:px-8 md:py-8">
-              <h2 className="text-2xl font-semibold tracking-tight">{section.title}</h2>
-              <div className="mt-4 space-y-4 text-muted-foreground">
+            <section key={section.title} className="rounded-sm border border-border bg-card px-6 py-6 md:px-8 md:py-8">
+              <h2 className="text-base font-semibold tracking-tight text-foreground">{section.title}</h2>
+              <div className="mt-4 space-y-4 text-sm text-muted-foreground">
                 {"items" in section
                   ? section.items.map((item, idx) =>
                       typeof item === "string" ? (
-                        <p key={idx} className="leading-relaxed">
-                          {item}
-                        </p>
+                        <p key={idx} className="leading-relaxed">{item}</p>
                       ) : (
                         <div key={item.heading}>
                           <p className="font-medium text-foreground">{item.heading}</p>
-                          <p className="text-sm md:text-base">{item.body}</p>
+                          <p className="mt-0.5">{item.body}</p>
                         </div>
                       )
                     )
@@ -81,22 +90,18 @@ export default function PrivacyPage() {
             </section>
           ))}
 
-          <section className="rounded-3xl border border-vcl-gold/40 bg-vcl-gold/10 px-6 py-6 md:px-8 md:py-8">
-            <h2 className="text-2xl font-semibold tracking-tight">5. Contact</h2>
-            <p className="mt-3 text-muted-foreground">
+          <section className="rounded-sm border border-vcl-gold/40 bg-vcl-gold/5 px-6 py-6 md:px-8 md:py-8">
+            <h2 className="text-base font-semibold tracking-tight text-foreground">5. Contact</h2>
+            <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
               Questions about privacy? Email{" "}
-              <a href="mailto:contact@varsityclublacrosse.com" className="text-vcl-gold hover:underline">
-                contact@varsityclublacrosse.com
-              </a>{" "}
+              <a href="mailto:contact@varsityclublacrosse.com" className="text-vcl-gold hover:underline">contact@varsityclublacrosse.com</a>{" "}
               or reach out via{" "}
-              <Link href="/about" className="text-vcl-gold hover:underline">
-                our about page
-              </Link>
-              . We earn the trust of the club lacrosse community by being transparent about data practices.
+              <Link href="/about" className="text-vcl-gold hover:underline">our about page</Link>.
+              We earn the trust of the club lacrosse community by being transparent about data practices.
             </p>
           </section>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

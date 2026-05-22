@@ -1,120 +1,110 @@
 import Link from "next/link";
-import Image from "next/image";
-import { FaInstagram, FaXTwitter, FaYoutube, FaLock } from "react-icons/fa6";
+import { FaInstagram, FaXTwitter, FaYoutube } from "react-icons/fa6";
 import { FEATURES } from "@/lib/feature-flags";
+import { VclLogo } from "@/components/layout/vcl-logo";
 
 export function Footer() {
   return (
-    <footer className="border-t border-border/40 bg-muted/30">
-      <div className="container mx-auto px-4 py-12 md:px-6 md:py-16">
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="sm:col-span-2 lg:col-span-1">
-            <Link href="/" className="flex items-center gap-3">
-              <Image
-                src="/vcl_logo3.png"
-                alt="Varsity Club Lacrosse"
-                width={48}
-                height={48}
-                className="h-12 w-auto"
-              />
-              <div>
-                <span className="text-lg font-bold">Varsity Club Lacrosse</span>
-                <p className="text-xs text-vcl-gold font-medium">Strictly Club. Strictly Business.</p>
-              </div>
+    <footer className="border-t border-border bg-secondary">
+      {/* Main footer grid */}
+      <div className="mx-auto max-w-[1440px] px-6 py-12 md:px-12 md:py-16">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Brand */}
+          <div className="sm:col-span-2 lg:col-span-1 flex flex-col gap-4">
+            <Link href="/" className="flex items-center gap-2.5">
+              <VclLogo size="sm" />
+              <span className="font-heading text-lg text-foreground">VCL</span>
             </Link>
-            <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
-              Your source for club lacrosse coverage. Primarily MCLA, plus SMLL, NCLL, WCLL and more.
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-[240px]">
+              Strictly Club. Strictly Business.
             </p>
-          </div>
-
-          <div>
-            <h3 className="font-semibold text-sm uppercase tracking-wider text-foreground">Content</h3>
-            <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
-              <li>
-                <Link href="/articles" className="hover:text-foreground">
-                  Articles
-                </Link>
-              </li>
-              {FEATURES.MEDIA_POLLS && (
-                <li>
-                  <Link href="/polls" className="hover:text-foreground">
-                    Media Poll
-                  </Link>
-                </li>
-              )}
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="font-semibold text-sm uppercase tracking-wider text-foreground">About</h3>
-            <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
-              <li>
-                <Link href="/about" className="hover:text-foreground">
-                  About VCL
-                </Link>
-              </li>
-              <li>
-                <a href="mailto:contact@varsityclublacrosse.com" className="hover:text-foreground">
-                  Contact
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="font-semibold text-sm uppercase tracking-wider text-foreground">Follow Us</h3>
-            <div className="mt-4 flex gap-3">
+            <div className="flex gap-4">
               <a
                 href="https://www.instagram.com/varsityclublacrosse/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center h-10 w-10 rounded-full bg-background border border-border hover:bg-vcl-gold hover:border-vcl-gold hover:text-vcl-gold-foreground transition-colors"
-                aria-label="Follow on Instagram"
+                aria-label="Instagram"
+                className="text-muted-foreground hover:text-foreground transition-colors"
               >
-                <FaInstagram className="h-5 w-5" />
+                <FaInstagram className="h-4 w-4" />
               </a>
               <a
                 href="https://x.com/VarsityLacrosse"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center h-10 w-10 rounded-full bg-background border border-border hover:bg-vcl-gold hover:border-vcl-gold hover:text-vcl-gold-foreground transition-colors"
-                aria-label="Follow on X"
+                aria-label="X / Twitter"
+                className="text-muted-foreground hover:text-foreground transition-colors"
               >
-                <FaXTwitter className="h-5 w-5" />
+                <FaXTwitter className="h-4 w-4" />
               </a>
               <a
                 href="https://www.youtube.com/channel/UCCaeRbVrXas2w-Fiu4ZnwTA"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center h-10 w-10 rounded-full bg-background border border-border hover:bg-vcl-gold hover:border-vcl-gold hover:text-vcl-gold-foreground transition-colors"
-                aria-label="Subscribe on YouTube"
+                aria-label="YouTube"
+                className="text-muted-foreground hover:text-foreground transition-colors"
               >
-                <FaYoutube className="h-5 w-5" />
+                <FaYoutube className="h-4 w-4" />
               </a>
             </div>
           </div>
-        </div>
 
-        <div className="mt-12 border-t border-border/40 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-        <div>
-        </div>
-          <p>&copy; {new Date().getFullYear()} Varsity Club Lacrosse. All rights reserved.</p>
-          <div className="flex items-center gap-4 text-xs uppercase tracking-wide">
-            <Link href="/privacy" className="hover:text-vcl-gold transition-colors">
-              Privacy Policy
-            </Link>
-            <span className="text-border">|</span>
-            <Link href="/terms" className="hover:text-vcl-gold transition-colors">
-              Terms of Service
-            </Link>
+          {/* Coverage */}
+          <div>
+            <h3 className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground mb-4">
+              Coverage
+            </h3>
+            <ul className="space-y-3 text-sm text-muted-foreground">
+              <li><Link href="/articles" className="hover:text-foreground transition-colors">Articles</Link></li>
+              {FEATURES.MEDIA_POLLS && (
+                <li><Link href="/polls" className="hover:text-foreground transition-colors">Media Poll Rankings</Link></li>
+              )}
+              {FEATURES.TRANSFERS && (
+                <li><Link href="/transfers" className="hover:text-foreground transition-colors">Transfer Tracker</Link></li>
+              )}
+            </ul>
           </div>
-          <Link 
-            href="/admin" 
-            className="flex items-center gap-2 hover:text-vcl-gold transition-colors"
+
+          {/* Leagues */}
+          <div>
+            <h3 className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground mb-4">
+              Leagues
+            </h3>
+            <ul className="space-y-3 text-sm text-muted-foreground">
+              <li><span>MCLA</span></li>
+              <li><span>SMLL</span></li>
+              <li><span>NCLL</span></li>
+              <li><span>WCLL</span></li>
+            </ul>
+          </div>
+
+          {/* Company */}
+          <div>
+            <h3 className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground mb-4">
+              Company
+            </h3>
+            <ul className="space-y-3 text-sm text-muted-foreground">
+              <li><Link href="/about" className="hover:text-foreground transition-colors">About</Link></li>
+              <li><Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link></li>
+              <li><Link href="/admin/login" className="hover:text-foreground transition-colors">Admin Login</Link></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom bar */}
+      <div className="border-t border-border">
+        <div className="mx-auto max-w-[1440px] px-6 py-4 md:px-12 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
+          <p>&copy; {new Date().getFullYear()} Varsity Club Lacrosse. All rights reserved.</p>
+          <a
+            href="https://www.instagram.com/varsityclublacrosse/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-vcl-gold/60 hover:text-vcl-gold transition-colors"
           >
-            <FaLock className="h-3 w-3" />
-            Admin Login
-          </Link>
+            @varsityclublacrosse
+          </a>
         </div>
       </div>
     </footer>

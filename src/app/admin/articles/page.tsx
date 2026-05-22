@@ -3,16 +3,6 @@ import { format } from "date-fns";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import prisma from "@/lib/db";
 import type { ArticleStatus, League } from "@prisma/client";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { deleteArticle } from "./actions";
 import { getActiveLeagues } from "@/lib/league-config";
 
@@ -39,8 +29,8 @@ export default async function ArticlesPage({ searchParams }: PageProps) {
     getActiveLeagues(),
   ]);
 
-  const filters: { label: string; value?: ArticleStatus }[] = [
-    { label: "All Status" },
+  const statusFilters: { label: string; value?: ArticleStatus }[] = [
+    { label: "All" },
     { label: "Draft", value: "DRAFT" },
     { label: "Published", value: "PUBLISHED" },
     { label: "Archived", value: "ARCHIVED" },
@@ -48,58 +38,28 @@ export default async function ArticlesPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      {/* Header */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-border pb-6">
         <div>
-          <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Editorial</p>
-          <h1 className="text-3xl font-bold tracking-tight">Articles</h1>
-          <p className="text-muted-foreground">Create, edit, and publish Varsity Club Lacrosse stories.</p>
+          <h1 className="font-heading text-4xl tracking-wide text-foreground">Articles</h1>
+          <p className="text-sm text-muted-foreground mt-1">Create, edit, and publish Varsity Club Lacrosse stories.</p>
         </div>
-        <Link href="/admin/articles/new">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            New Article
-          </Button>
+        <Link
+          href="/admin/articles/new"
+          className="inline-flex items-center gap-2 rounded-sm bg-vcl-gold px-5 h-10 text-sm font-bold text-vcl-gold-foreground hover:bg-vcl-gold/90 transition-colors shrink-0"
+        >
+          <Plus className="h-4 w-4" />
+          New Article
         </Link>
       </div>
 
-      <div className="space-y-4">
-        <div>
-          <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Filter by League
-          </p>
-          <div className="flex flex-wrap gap-2 rounded-2xl border border-border/50 bg-card p-2">
-            <Link
-              href={normalizedStatus ? `/admin/articles?status=${normalizedStatus}` : "/admin/articles"}
-              className={`rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
-                !normalizedLeague
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted"
-              }`}
-            >
-              All
-            </Link>
-            {leagues.map((league) => (
-              <Link
-                key={league.id}
-                href={`/admin/articles?${normalizedStatus ? `status=${normalizedStatus}&` : ""}league=${league.code}`}
-                className={`rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
-                  normalizedLeague === league.code
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted"
-                }`}
-              >
-                {league.code}
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Filter by Status
-          </p>
-          <div className="flex flex-wrap gap-2 rounded-2xl border border-border/50 bg-card p-2">
-            {filters.map((filter) => (
+      {/* Filters */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        {/* Status filter */}
+        <div className="flex items-center gap-1.5">
+          {statusFilters.map((filter) => {
+            const isActive = (!normalizedStatus && !filter.value) || normalizedStatus === filter.value;
+            return (
               <Link
                 key={filter.label}
                 href={
@@ -107,90 +67,128 @@ export default async function ArticlesPage({ searchParams }: PageProps) {
                     ? `/admin/articles?${normalizedLeague ? `league=${normalizedLeague}&` : ""}status=${filter.value}`
                     : normalizedLeague ? `/admin/articles?league=${normalizedLeague}` : "/admin/articles"
                 }
-                className={`rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
-                  (normalizedStatus === filter.value) || (!normalizedStatus && !filter.value)
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted"
+                className={`rounded-sm px-3 h-8 flex items-center text-xs font-semibold transition-colors ${
+                  isActive
+                    ? "bg-vcl-gold text-vcl-gold-foreground"
+                    : "border border-border text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {filter.label}
               </Link>
-            ))}
-          </div>
+            );
+          })}
+        </div>
+
+        {/* League filter */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <Link
+            href={normalizedStatus ? `/admin/articles?status=${normalizedStatus}` : "/admin/articles"}
+            className={`rounded-sm px-3 h-8 flex items-center text-xs font-semibold transition-colors ${
+              !normalizedLeague
+                ? "bg-vcl-gold text-vcl-gold-foreground"
+                : "border border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            All Leagues
+          </Link>
+          {leagues.map((lg) => (
+            <Link
+              key={lg.id}
+              href={`/admin/articles?${normalizedStatus ? `status=${normalizedStatus}&` : ""}league=${lg.code}`}
+              className={`rounded-sm px-3 h-8 flex items-center text-xs font-semibold transition-colors ${
+                normalizedLeague === lg.code
+                  ? "bg-vcl-gold text-vcl-gold-foreground"
+                  : "border border-border text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {lg.code}
+            </Link>
+          ))}
         </div>
       </div>
 
-      <div className="rounded-3xl border border-border/50 bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Title</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Author</TableHead>
-              <TableHead>Updated</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {articles.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
-                  No articles found. Try another filter or create your first piece.
-                </TableCell>
-              </TableRow>
-            ) : (
-              articles.map((article) => (
-                <TableRow key={article.id}>
-                  <TableCell>
-                    <div className="font-medium">{article.title}</div>
-                    <div className="text-xs text-muted-foreground">/{article.slug}</div>
-                  </TableCell>
-                  <TableCell className="space-x-2">
-                    <Badge
-                      variant={
-                        article.status === "PUBLISHED" ? "default" : article.status === "DRAFT" ? "secondary" : "outline"
-                      }
+      {/* Table */}
+      <div className="rounded-sm border border-border bg-card overflow-hidden">
+        {/* Table head */}
+        <div className="hidden md:grid grid-cols-[1fr_100px_100px_140px_100px] items-center h-11 px-5 bg-secondary border-b border-border">
+          <span className="text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">Title</span>
+          <span className="text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">League</span>
+          <span className="text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">Status</span>
+          <span className="text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">Date</span>
+          <span className="text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase text-right">Actions</span>
+        </div>
+
+        {articles.length === 0 ? (
+          <div className="py-16 text-center text-sm text-muted-foreground">
+            No articles found. Try another filter or create your first piece.
+          </div>
+        ) : (
+          <div className="divide-y divide-border">
+            {articles.map((article) => (
+              <div key={article.id} className="grid grid-cols-1 md:grid-cols-[1fr_100px_100px_140px_100px] items-center min-h-[56px] px-5 py-3 md:py-0 hover:bg-accent transition-colors">
+                {/* Title */}
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-sm font-medium text-foreground">{article.title}</span>
+                  <span className="text-xs text-muted-foreground">/{article.slug}</span>
+                </div>
+                {/* League */}
+                <div className="hidden md:block">
+                  {article.league ? (
+                    <span className="rounded-sm bg-vcl-gold px-2 py-0.5 text-[10px] font-bold tracking-widest text-vcl-gold-foreground uppercase">
+                      {article.league}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
+                </div>
+                {/* Status */}
+                <div className="hidden md:flex items-center gap-1.5">
+                  <span className={`rounded-sm px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase ${
+                    article.status === "PUBLISHED"
+                      ? "bg-vcl-gold text-vcl-gold-foreground"
+                      : article.status === "DRAFT"
+                      ? "bg-accent text-muted-foreground border border-border"
+                      : "bg-accent text-muted-foreground border border-border"
+                  }`}>
+                    {article.status}
+                  </span>
+                  {article.featured && (
+                    <span className="rounded-sm border border-vcl-gold/40 px-1.5 py-0.5 text-[9px] font-bold tracking-widest text-vcl-gold uppercase">
+                      Featured
+                    </span>
+                  )}
+                </div>
+                {/* Date */}
+                <span className="hidden md:block text-xs text-muted-foreground">
+                  {article.publishedAt
+                    ? format(article.publishedAt, "MMM d, yyyy")
+                    : format(article.updatedAt, "MMM d, yyyy")}
+                </span>
+                {/* Actions */}
+                <div className="flex items-center justify-end gap-2 mt-2 md:mt-0">
+                  <Link
+                    href={`/admin/articles/${article.id}`}
+                    className="inline-flex items-center gap-1.5 rounded-sm border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:border-vcl-gold/40 hover:text-vcl-gold transition-colors"
+                  >
+                    <Pencil className="h-3 w-3" />
+                    Edit
+                  </Link>
+                  <form action={deleteArticle}>
+                    <input type="hidden" name="id" value={article.id} />
+                    <button
+                      type="submit"
+                      className="inline-flex items-center gap-1.5 rounded-sm border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:border-red-500/40 hover:text-red-400 transition-colors"
+                      aria-label={`Delete ${article.title}`}
                     >
-                      {article.status.toLowerCase()}
-                    </Badge>
-                    {article.featured && (
-                      <Badge variant="outline" className="uppercase">
-                        Featured
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>{article.author || "—"}</TableCell>
-                  <TableCell>
-                    {article.publishedAt
-                      ? format(article.publishedAt, "MMM d, yyyy")
-                      : format(article.updatedAt, "MMM d, yyyy")}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Link href={`/admin/articles/${article.id}`}>
-                        <Button variant="ghost" size="icon">
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                      <form action={deleteArticle}>
-                        <input type="hidden" name="id" value={article.id} />
-                        <Button
-                          type="submit"
-                          variant="ghost"
-                          size="icon"
-                          className="text-red-500 hover:text-red-600"
-                          aria-label={`Delete ${article.title}`}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </form>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+                      <Trash2 className="h-3 w-3" />
+                      Delete
+                    </button>
+                  </form>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,22 +1,31 @@
 "use client";
 
+import { useTransition } from "react";
 import { deleteArticle } from "./actions";
 
 export function DeleteArticleButton({ id }: { id: string }) {
+  const [isPending, startTransition] = useTransition();
+
+  const handleDelete = () => {
+    if (!confirm("Are you sure you want to delete this article?")) {
+      return;
+    }
+
+    const formData = new FormData();
+    formData.set("id", id);
+    startTransition(() => {
+      deleteArticle(formData);
+    });
+  };
+
   return (
-    <form action={deleteArticle} className="flex-shrink-0">
-      <input type="hidden" name="id" value={id} />
-      <button
-        type="submit"
-        className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100"
-        onClick={(e) => {
-          if (!confirm("Are you sure you want to delete this article?")) {
-            e.preventDefault();
-          }
-        }}
-      >
-        Delete Article
-      </button>
-    </form>
+    <button
+      type="button"
+      onClick={handleDelete}
+      disabled={isPending}
+      className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-sm border border-border px-4 h-10 text-sm font-semibold text-muted-foreground hover:border-red-500/40 hover:text-red-400 transition-colors disabled:opacity-60"
+    >
+      {isPending ? "Deleting..." : "Delete Article"}
+    </button>
   );
 }

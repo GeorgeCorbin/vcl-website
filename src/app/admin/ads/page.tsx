@@ -2,19 +2,9 @@ import { redirect } from "next/navigation";
 import { FEATURES } from "@/lib/feature-flags";
 import Link from "next/link";
 import { format } from "date-fns";
-import { Plus, Pencil, Trash2, Eye, EyeOff } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, Info } from "lucide-react";
 import prisma from "@/lib/db";
 import { AdType } from "@prisma/client";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { deleteAdUnit, toggleAdUnit } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -37,101 +27,85 @@ export default async function AdsManagementPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      {/* Header */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-border pb-6">
         <div>
-          <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Advertising</p>
-          <h1 className="text-3xl font-bold tracking-tight">Ad Management</h1>
-          <p className="text-muted-foreground">Manage display ads and ad placements across the site.</p>
+          <h1 className="font-heading text-4xl tracking-wide text-foreground">Ad Units</h1>
+          <p className="text-sm text-muted-foreground mt-1">Manage display ads and ad placements across the site.</p>
         </div>
-        <Link href="/admin/ads/new">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            New Ad Unit
-          </Button>
+        <Link
+          href="/admin/ads/new"
+          className="inline-flex items-center gap-2 rounded-sm bg-vcl-gold px-5 h-10 text-sm font-bold text-vcl-gold-foreground hover:bg-vcl-gold/90 transition-colors shrink-0"
+        >
+          <Plus className="h-4 w-4" />
+          New Ad Unit
         </Link>
       </div>
 
-      <div className="rounded-3xl border border-border/50 bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Placement</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Updated</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {ads.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
-                  No ad units found. Create your first ad unit to get started.
-                </TableCell>
-              </TableRow>
-            ) : (
-              ads.map((ad) => (
-                <TableRow key={ad.id}>
-                  <TableCell className="font-medium">{ad.name}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{adTypeLabels[ad.adType]}</Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{ad.placement || "—"}</TableCell>
-                  <TableCell>
-                    <Badge variant={ad.enabled ? "default" : "secondary"}>
-                      {ad.enabled ? "Active" : "Disabled"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{format(ad.updatedAt, "MMM d, yyyy")}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <form action={toggleAdUnit}>
-                        <input type="hidden" name="id" value={ad.id} />
-                        <input type="hidden" name="enabled" value={ad.enabled ? "false" : "true"} />
-                        <Button
-                          type="submit"
-                          variant="ghost"
-                          size="icon"
-                          aria-label={ad.enabled ? "Disable ad" : "Enable ad"}
-                        >
-                          {ad.enabled ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                        </Button>
-                      </form>
-                      <Link href={`/admin/ads/${ad.id}`}>
-                        <Button variant="ghost" size="icon">
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                      <form action={deleteAdUnit}>
-                        <input type="hidden" name="id" value={ad.id} />
-                        <Button
-                          type="submit"
-                          variant="ghost"
-                          size="icon"
-                          className="text-red-500 hover:text-red-600"
-                          aria-label={`Delete ${ad.name}`}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </form>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+      {/* Info banner */}
+      <div className="flex items-start gap-3 rounded-sm border border-vcl-gold/30 bg-vcl-gold/5 p-4">
+        <Info className="h-4 w-4 text-vcl-gold shrink-0 mt-0.5" />
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          Public ad placements are managed in code. Use this panel to configure ad units, sizes, and targeting.
+        </p>
       </div>
 
-      <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-        <h3 className="mb-2 text-sm font-medium text-blue-800">Ad Unit Types</h3>
-        <ul className="space-y-1 text-sm text-blue-700">
-          <li>• <strong>Display:</strong> Standard rectangular ads (300x250, 728x90, etc.)</li>
-          <li>• <strong>Leaderboard:</strong> Wide banner ads at the top of pages (728x90, 970x90)</li>
-          <li>• <strong>Sidebar:</strong> Vertical ads in sidebars (160x600, 300x600)</li>
-          <li>• <strong>Popup:</strong> Bottom popup or overlay ads</li>
-          <li>• <strong>Inline:</strong> Ads embedded within content</li>
+      {/* Table */}
+      <div className="rounded-sm border border-border bg-card overflow-hidden">
+        <div className="hidden lg:grid grid-cols-[1fr_140px_180px_100px_140px_120px] items-center h-11 px-5 bg-secondary border-b border-border">
+          {["Name","Size","Placement","Status","Updated","Actions"].map((h) => (
+            <span key={h} className="text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">{h}</span>
+          ))}
+        </div>
+        {ads.length === 0 ? (
+          <div className="py-16 text-center text-sm text-muted-foreground">No ad units found. Create your first ad unit to get started.</div>
+        ) : (
+          <div className="divide-y divide-border">
+            {ads.map((ad) => (
+              <div key={ad.id} className="grid grid-cols-1 lg:grid-cols-[1fr_140px_180px_100px_140px_120px] items-center min-h-[52px] px-5 py-3 lg:py-0 hover:bg-accent transition-colors">
+                <span className="text-sm font-medium text-foreground">{ad.name}</span>
+                <span className="hidden lg:block text-xs text-muted-foreground">{adTypeLabels[ad.adType]}</span>
+                <span className="hidden lg:block text-xs text-muted-foreground">{ad.placement || "—"}</span>
+                <span className="hidden lg:block">
+                  <span className={`rounded-sm px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase ${
+                    ad.enabled ? "bg-vcl-gold text-vcl-gold-foreground" : "border border-border text-muted-foreground"
+                  }`}>{ad.enabled ? "Active" : "Disabled"}</span>
+                </span>
+                <span className="hidden lg:block text-xs text-muted-foreground">{format(ad.updatedAt, "MMM d, yyyy")}</span>
+                <div className="flex items-center gap-1.5 mt-2 lg:mt-0">
+                  <form action={toggleAdUnit}>
+                    <input type="hidden" name="id" value={ad.id} />
+                    <input type="hidden" name="enabled" value={ad.enabled ? "false" : "true"} />
+                    <button type="submit" className="inline-flex items-center gap-1 rounded-sm border border-border px-2.5 py-1.5 text-xs font-semibold text-muted-foreground hover:border-vcl-gold/40 hover:text-vcl-gold transition-colors">
+                      {ad.enabled ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                      {ad.enabled ? "Disable" : "Enable"}
+                    </button>
+                  </form>
+                  <Link href={`/admin/ads/${ad.id}`} className="inline-flex items-center gap-1 rounded-sm border border-border px-2.5 py-1.5 text-xs font-semibold text-muted-foreground hover:border-vcl-gold/40 hover:text-vcl-gold transition-colors">
+                    <Pencil className="h-3 w-3" /> Edit
+                  </Link>
+                  <form action={deleteAdUnit}>
+                    <input type="hidden" name="id" value={ad.id} />
+                    <button type="submit" className="inline-flex items-center gap-1 rounded-sm border border-border px-2.5 py-1.5 text-xs font-semibold text-muted-foreground hover:border-red-500/40 hover:text-red-400 transition-colors" aria-label={`Delete ${ad.name}`}>
+                      <Trash2 className="h-3 w-3" /> Delete
+                    </button>
+                  </form>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Tips */}
+      <div className="rounded-sm border border-border bg-card p-4">
+        <h3 className="mb-2 text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">Ad Unit Types</h3>
+        <ul className="space-y-1 text-sm text-muted-foreground">
+          <li>• <strong className="text-foreground">Display:</strong> Standard rectangular ads (300×250, 728×90)</li>
+          <li>• <strong className="text-foreground">Leaderboard:</strong> Wide banner ads at the top of pages (728×90, 970×90)</li>
+          <li>• <strong className="text-foreground">Sidebar:</strong> Vertical ads in sidebars (160×600, 300×600)</li>
+          <li>• <strong className="text-foreground">Popup:</strong> Bottom popup or overlay ads</li>
+          <li>• <strong className="text-foreground">Inline:</strong> Ads embedded within content</li>
         </ul>
       </div>
     </div>

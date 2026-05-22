@@ -1,9 +1,7 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, BarChart3, Users } from "lucide-react";
 import Link from "next/link";
 import prisma from "@/lib/db";
 import { formatDistanceToNow } from "date-fns";
-import { Badge } from "@/components/ui/badge";
 import { FEATURES } from "@/lib/feature-flags";
 
 export const dynamic = "force-dynamic";
@@ -79,120 +77,114 @@ export default async function AdminDashboard() {
     },
   ];
   return (
-    <div className="space-y-6 md:space-y-8">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-sm md:text-base text-muted-foreground mt-1">
-          Welcome to the VCL admin panel.
-        </p>
+    <div className="space-y-8">
+      {/* Page header */}
+      <div className="border-b border-border pb-6">
+        <h1 className="font-heading text-4xl tracking-wide text-foreground">Dashboard</h1>
+        <p className="text-sm text-muted-foreground mt-1">Welcome to the VCL admin panel.</p>
       </div>
 
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-3 auto-rows-fr">
+      {/* Stat cards */}
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-3">
         {stats.map((stat) => (
           <Link key={stat.title} href={stat.href}>
-            <Card className="hover:bg-accent/50 transition-colors cursor-pointer h-full">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
-                <CardTitle className="text-xs md:text-sm font-medium">
-                  {stat.title}
-                </CardTitle>
+            <div className="rounded-sm border border-border bg-card p-5 hover:border-vcl-gold/40 transition-colors cursor-pointer">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">{stat.title}</span>
                 <stat.icon className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent className="p-4 pt-0">
-                <div className="text-xl md:text-2xl font-bold">{stat.value}</div>
-                <p className="text-xs text-muted-foreground">
-                  {stat.description}
-                </p>
-              </CardContent>
-            </Card>
+              </div>
+              <div className="font-heading text-4xl text-foreground">{stat.value}</div>
+              <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
+            </div>
           </Link>
         ))}
       </div>
 
-      <div className="grid gap-4 md:gap-6 md:grid-cols-2 auto-rows-fr">
-        <Card className="h-full">
-          <CardHeader className="p-4 md:p-6 pb-2 md:pb-4">
-            <CardTitle className="text-lg">Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 md:p-6 pt-0 space-y-3">
+      {/* Quick actions + Recent activity */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Quick Actions */}
+        <div className="rounded-sm border border-border bg-card p-6">
+          <h2 className="text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase mb-5">Quick Actions</h2>
+          <div className="flex flex-col gap-3">
             <Link
               href="/admin/articles/new"
-              className="block p-3 rounded-lg border border-border/50 hover:bg-accent hover:border-vcl-gold/50 transition-colors"
+              className="flex flex-col gap-1 rounded-sm border border-border p-4 hover:border-vcl-gold/40 hover:bg-accent transition-colors"
             >
-              <div className="font-medium text-sm md:text-base">Create New Article</div>
-              <div className="text-xs md:text-sm text-muted-foreground">
-                Write and publish a new article
-              </div>
+              <span className="text-sm font-semibold text-foreground">Create New Article</span>
+              <span className="text-xs text-muted-foreground">Write and publish a new article</span>
             </Link>
             {showMediaPolls && (
               <Link
                 href="/admin/polls/new"
-                className="block p-3 rounded-lg border border-border/50 hover:bg-accent hover:border-vcl-gold/50 transition-colors"
+                className="flex flex-col gap-1 rounded-sm border border-border p-4 hover:border-vcl-gold/40 hover:bg-accent transition-colors"
               >
-                <div className="font-medium text-sm md:text-base">Create New Poll</div>
-                <div className="text-xs md:text-sm text-muted-foreground">
-                  Set up a new weekly media poll
-                </div>
+                <span className="text-sm font-semibold text-foreground">Create New Poll</span>
+                <span className="text-xs text-muted-foreground">Set up a new weekly media poll</span>
               </Link>
             )}
-          </CardContent>
-        </Card>
+            <Link
+              href="/admin/ads"
+              className="flex flex-col gap-1 rounded-sm border border-border p-4 hover:border-vcl-gold/40 hover:bg-accent transition-colors"
+            >
+              <span className="text-sm font-semibold text-foreground">Manage Ad Units</span>
+              <span className="text-xs text-muted-foreground">Configure ad placements across the site</span>
+            </Link>
+          </div>
+        </div>
 
-        <Card className="h-full">
-          <CardHeader className="p-4 md:p-6 pb-2 md:pb-4">
-            <CardTitle className="text-lg">Recent Activity</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 md:p-6 pt-0">
-            {allActivities.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No recent activity to display.
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {allActivities.map((activity, index) => (
-                  <div key={`${activity.type}-${index}`} className="flex items-start gap-3 text-sm">
-                    <div className="mt-0.5">
-                      {activity.type === "article" && <FileText className="h-4 w-4 text-muted-foreground" />}
-                      {activity.type === "poll" && <BarChart3 className="h-4 w-4 text-muted-foreground" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      {activity.type === "article" && (
-                        <>
-                          <Link href={`/admin/articles/${activity.data.id}`} className="font-medium hover:underline line-clamp-1">
-                            {activity.data.title}
-                          </Link>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge variant="outline" className="text-xs">{activity.data.league}</Badge>
-                            <Badge variant={activity.data.status === "PUBLISHED" ? "default" : "secondary"} className="text-xs">
-                              {activity.data.status}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">
-                              {formatDistanceToNow(activity.data.createdAt, { addSuffix: true })}
-                            </span>
-                          </div>
-                        </>
-                      )}
-                      {activity.type === "poll" && (
-                        <>
-                          <Link href={`/admin/polls/${activity.data.id}`} className="font-medium hover:underline">
-                            {activity.data.league} Week {activity.data.weekNumber} - {activity.data.season}
-                          </Link>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge variant={activity.data.status === "PUBLISHED" ? "default" : "secondary"} className="text-xs">
-                              {activity.data.status}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">
-                              {formatDistanceToNow(activity.data.createdAt, { addSuffix: true })}
-                            </span>
-                          </div>
-                        </>
-                      )}
-                    </div>
+        {/* Recent Activity */}
+        <div className="rounded-sm border border-border bg-card p-6">
+          <h2 className="text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase mb-5">Recent Activity</h2>
+          {allActivities.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No recent activity to display.</p>
+          ) : (
+            <div className="flex flex-col divide-y divide-border">
+              {allActivities.map((activity, index) => (
+                <div key={`${activity.type}-${index}`} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
+                  <div className="mt-0.5 h-7 w-7 rounded-sm bg-accent flex items-center justify-center shrink-0">
+                    {activity.type === "article" && <FileText className="h-3.5 w-3.5 text-muted-foreground" />}
+                    {activity.type === "poll" && <BarChart3 className="h-3.5 w-3.5 text-muted-foreground" />}
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                  <div className="flex-1 min-w-0">
+                    {activity.type === "article" && (
+                      <>
+                        <Link href={`/admin/articles/${activity.data.id}`} className="text-sm font-medium text-foreground hover:text-vcl-gold transition-colors line-clamp-1">
+                          {activity.data.title}
+                        </Link>
+                        <div className="flex items-center gap-2 mt-1">
+                          {activity.data.league && (
+                            <span className="rounded-sm bg-accent px-1.5 py-0.5 text-[10px] text-muted-foreground">{activity.data.league}</span>
+                          )}
+                          <span className={`rounded-sm px-1.5 py-0.5 text-[10px] font-semibold ${activity.data.status === "PUBLISHED" ? "bg-vcl-gold text-vcl-gold-foreground" : "bg-accent text-muted-foreground"}`}>
+                            {activity.data.status}
+                          </span>
+                          <span className="text-[11px] text-muted-foreground">
+                            {formatDistanceToNow(activity.data.createdAt, { addSuffix: true })}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                    {activity.type === "poll" && (
+                      <>
+                        <Link href={`/admin/polls/${activity.data.id}`} className="text-sm font-medium text-foreground hover:text-vcl-gold transition-colors">
+                          {activity.data.league} · Week {activity.data.weekNumber} · {activity.data.season}
+                        </Link>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className={`rounded-sm px-1.5 py-0.5 text-[10px] font-semibold ${activity.data.status === "PUBLISHED" ? "bg-vcl-gold text-vcl-gold-foreground" : "bg-accent text-muted-foreground"}`}>
+                            {activity.data.status}
+                          </span>
+                          <span className="text-[11px] text-muted-foreground">
+                            {formatDistanceToNow(activity.data.createdAt, { addSuffix: true })}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
