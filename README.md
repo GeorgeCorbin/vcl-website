@@ -195,36 +195,71 @@ npm run build
 
 Set `DATABASE_URL` in your hosting environment and run migrations against the production database before going live.
 
-### Self-hosted (Lightsail, VPS)
+### Self-hosted (Lightsail, VPS) — recommended setup
 
-This matches the approach used on the SMLL site (`smll`).
+Uploads live on disk; the database only stores the URL (e.g. `/uploads/1234-photo.jpg`). **Do not store uploads inside the app repo** — `git pull`, `git clean -fd`, and rebuilds can wipe `public/uploads/`.
 
-Uploads are written to disk and the database only stores the URL (e.g. `/uploads/1234-photo.jpg`). By default that path is `public/uploads/`, which is gitignored.
+Use a persistent folder **outside** the project, the same pattern as SMLL:
 
-**Why uploads disappear after deploy:** deploy scripts that run `git clean -fd` (including SMLL’s GitHub Actions workflow) delete untracked files under `public/uploads/`. The article row still points at `/uploads/...`, but the file is gone — broken image.
-
-**Fix — persistent uploads directory** (same pattern as SMLL’s `UPLOADS_DIR`):
+#### One-time setup
 
 ```bash
+# 1. Create persistent storage (survives every deploy)
 mkdir -p ~/vcl-data/uploads
+
+# 2. Move any existing uploads out of the repo
+cp ~/vcl-website/public/uploads/* ~/vcl-data/uploads/ 2>/dev/null || true
+
+# 3. Tell the app where to write new files (.env in project root)
+#    Add this line to ~/vcl-website/.env:
+#    UPLOADS_DIR=/home/ubuntu/vcl-data/uploads
+
+# 4. Restart so PM2 picks up the env var
+cd ~/vcl-website
+pm2 restart vcl --update-env   # use your PM2 process name
 ```
 
-```env
-UPLOADS_DIR=/home/ubuntu/vcl-data/uploads
-```
+#### Nginx (recommended for production)
 
-Restart the app after changing `.env` (`pm2 restart vcl --update-env` or equivalent). Re-upload affected cover images, or copy any surviving files from `public/uploads/` into the new folder.
-
-**Serving uploads:** SMLL serves `/uploads/` directly from Nginx. VCL also includes an app route at `/uploads/[...path]` so images work even without an Nginx alias. For production, you can add either:
+Serve `/uploads/` directly from disk. The `alias` path **must match** `UPLOADS_DIR`:
 
 ```nginx
-# Optional: serve uploads from disk without hitting Node
 location /uploads/ {
     alias /home/ubuntu/vcl-data/uploads/;
 }
 ```
 
-**Admin image previews:** Next.js `Image` components use `unoptimized` for `/uploads/` paths (same as SMLL) to avoid 400 errors from the Image Optimization API behind Nginx/PM2.
+```bash
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+Nginx handles image requests without hitting Node. If you skip this block, the Next.js `/uploads/[...path]` route can serve files instead — but Nginx + persistent `UPLOADS_DIR` is the setup to use on Lightsail.
+
+#### Deploy workflow (safe for uploads)
+
+After the one-time setup above, normal deploys are fine:
+
+```bash
+cd ~/vcl-website
+git pull
+npm ci          # if lockfile changed
+npm run build
+npx prisma migrate deploy   # if migrations added
+pm2 restart vcl --update-env
+```
+
+`~/vcl-data/uploads/` is outside the repo, so **`git clean -fd` and rebuilds never touch your images**. Only the database and `~/vcl-data/` need backups for editorial content.
+
+#### Checklist
+
+| Item | Value |
+|------|--------|
+| App writes to | `UPLOADS_DIR=/home/ubuntu/vcl-data/uploads` in `.env` |
+| Nginx `alias` | `/home/ubuntu/vcl-data/uploads/` (trailing slash required) |
+| PM2 restart | Always use `--update-env` after editing `.env` |
+| Do not use | `public/uploads/` on production (ephemeral) |
+
+**Admin image previews:** Next.js `Image` components use `unoptimized` for `/uploads/` paths to avoid 400 errors from the Image Optimization API behind Nginx/PM2.
 
 ## License
 
