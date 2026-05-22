@@ -7,6 +7,12 @@ interface ArticlePageProps {
   params: Promise<{ slug: string }>;
 }
 
+function getReadTime(html: string): number {
+  const text = html.replace(/<[^>]+>/g, " ");
+  const words = text.trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.round(words / 200));
+}
+
 export default async function ArticlePage({ params }: ArticlePageProps) {
   const { slug } = await params;
   const article = await ArticleService.getBySlug(slug);
@@ -17,6 +23,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
   const allRecent = await ArticleService.list({ status: "PUBLISHED", limit: 4 }).catch(() => []);
   const relatedArticles = allRecent.filter((a) => a.id !== article.id).slice(0, 3);
+  const readTime = getReadTime(article.content);
 
   return (
     <div className="flex flex-col">
@@ -71,6 +78,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                       {new Date(article.publishedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
                     </span>
                   )}
+                  <span className="text-muted-foreground">·</span>
+                  <span className="text-muted-foreground">{readTime} min read</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-muted-foreground">Share:</span>
@@ -124,12 +133,12 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
             {relatedArticles.length > 0 && (
               <div className="rounded-sm border border-border bg-card p-4">
-                <h3 className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase mb-4">
+                <h3 className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase pb-4 border-b border-border">
                   Related Articles
                 </h3>
                 <div className="flex flex-col">
                   {relatedArticles.map((rel) => (
-                    <Link key={rel.id} href={`/articles/${rel.slug}`} className="group flex flex-col gap-1.5 py-3 border-t border-border first:border-t-0 hover:opacity-80 transition-opacity">
+                    <Link key={rel.id} href={`/articles/${rel.slug}`} className="group flex flex-col gap-1.5 py-3 border-b border-border hover:opacity-80 transition-opacity">
                       {rel.league && (
                         <span className="text-[10px] font-bold tracking-[0.15em] text-vcl-gold uppercase">{rel.league}</span>
                       )}

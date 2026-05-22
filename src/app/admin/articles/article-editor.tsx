@@ -1,16 +1,16 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useRef, useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { uploadImageAction } from "./actions";
 import { isUploadedImage } from "@/lib/upload-path";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Type, Eye, ImageIcon, Calendar } from "lucide-react";
-import { ArticleStatus, League } from "@prisma/client";
+import { Eye, ImageIcon, Calendar, X } from "lucide-react";
+import { TiptapEditor, type TiptapEditorHandle } from "@/components/editor/tiptap-editor";
+import { ArticleStatus } from "@prisma/client";
 
 type ArticleEditorProps = {
   mode: "create" | "edit";
@@ -24,8 +24,9 @@ type ArticleEditorProps = {
     status: ArticleStatus;
     featured: boolean;
     author: string | null;
-    league?: League | null;
+    league?: string | null;
     publishedAt?: Date | null;
+    tags?: { id: string; name: string; slug: string }[];
   };
   initialImages: string[];
   leagues: { id: string; name: string; code: string }[];
@@ -78,8 +79,28 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [tags, setTags] = useState<string[]>(
+    article?.tags?.map((t) => t.name) ?? []
+  );
+  const [tagInput, setTagInput] = useState("");
   const [isPending, startTransition] = useTransition();
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<TiptapEditorHandle>(null);
+
+  const addTag = (value: string) => {
+    const trimmed = value.trim().toLowerCase();
+    if (trimmed && !tags.includes(trimmed)) {
+      setTags((prev) => [...prev, trimmed]);
+    }
+    setTagInput("");
+  };
+
+  const removeTag = (tag: string) => {
+    setTags((prev) => prev.filter((t) => t !== tag));
+  };
+
+  const insertImageIntoEditor = (src: string) => {
+    editorRef.current?.insertImage(src);
+  };
 
   const handleTitleChange = (value: string) => {
     setTitle(value);
@@ -92,35 +113,6 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
     }
   };
 
-  const insertTag = (openTag: string, closeTag = "") => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = content.substring(start, end);
-    const newContent =
-      selectedText.length > 0
-        ? `${content.substring(0, start)}${openTag}${selectedText}${closeTag}${content.substring(end)}`
-        : `${content.substring(0, start)}${openTag}${closeTag}${content.substring(end)}`;
-    const cursorPosition = start + openTag.length + selectedText.length + closeTag.length;
-    setContent(newContent);
-    requestAnimationFrame(() => {
-      textarea.focus();
-      textarea.setSelectionRange(cursorPosition, cursorPosition);
-    });
-  };
-
-  const insertAtCursor = (text: string) => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-    const start = textarea.selectionStart;
-    const newText = content.substring(0, start) + text + content.substring(start);
-    setContent(newText);
-    requestAnimationFrame(() => {
-      textarea.focus();
-      textarea.setSelectionRange(start + text.length, start + text.length);
-    });
-  };
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -197,6 +189,8 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
         formData.set("author", author);
         formData.set("league", league);
         formData.set("coverImageCurrent", coverPath);
+        formData.delete("tags");
+        tags.forEach((tag) => formData.append("tags", tag));
         if (publishDate) {
           formData.set("publishedAt", new Date(publishDate).toISOString());
         }
@@ -283,41 +277,8 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="content" className="flex items-center gap-2">
-              Content <Type className="h-4 w-4 text-muted-foreground" />
-            </Label>
-            <div className="flex flex-wrap gap-1.5 rounded-t-sm border border-border bg-secondary px-3 py-2">
-              <ToolbarButton onClick={() => insertTag("<strong>", "</strong>")}>Bold</ToolbarButton>
-              <ToolbarButton onClick={() => insertTag("<em>", "</em>")}>Italic</ToolbarButton>
-              <ToolbarButton onClick={() => insertTag("<u>", "</u>")}>Underline</ToolbarButton>
-              <Divider />
-              <ToolbarButton onClick={() => insertTag("<h2>", "</h2>")}>H2</ToolbarButton>
-              <ToolbarButton onClick={() => insertTag("<h3>", "</h3>")}>H3</ToolbarButton>
-              <ToolbarButton onClick={() => insertTag("<p>", "</p>")}>Paragraph</ToolbarButton>
-              <Divider />
-              <ToolbarButton onClick={() => insertTag("<ul>\n  <li>", "</li>\n</ul>")}>Bullets</ToolbarButton>
-              <ToolbarButton onClick={() => insertTag("<ol>\n  <li>", "</li>\n</ol>")}>Numbers</ToolbarButton>
-              <ToolbarButton onClick={() => insertTag('<blockquote class="border-l-4 border-vcl-gold pl-4 italic">', "</blockquote>")}>
-                Quote
-              </ToolbarButton>
-              <ToolbarButton
-                onClick={() => {
-                  const url = prompt("Enter URL");
-                  if (url) insertTag(`<a href="${url}" class="text-vcl-gold hover:underline">`, "</a>");
-                }}
-              >
-                Link
-              </ToolbarButton>
-            </div>
-            <Textarea
-              ref={textareaRef}
-              id="content"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              rows={14}
-              required
-              className="rounded-t-none"
-            />
+            <Label>Content</Label>
+            <TiptapEditor ref={editorRef} value={content} onChange={setContent} />
           </div>
         </section>
 
@@ -377,6 +338,42 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
               onChange={(e) => setPublishDate(e.target.value)}
             />
             <p className="text-xs text-muted-foreground">Leave empty to publish immediately when status is set to Published</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Tags</Label>
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {tags.map((tag) => (
+                <span key={tag} className="inline-flex items-center gap-1 rounded-full border border-border bg-accent px-2.5 py-0.5 text-xs text-muted-foreground">
+                  {tag}
+                  <button type="button" onClick={() => removeTag(tag)} className="hover:text-foreground transition-colors">
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <Input
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === ",") {
+                    e.preventDefault();
+                    addTag(tagInput);
+                  }
+                }}
+                placeholder="Type a tag and press Enter"
+                className="flex-1"
+              />
+              <button
+                type="button"
+                onClick={() => addTag(tagInput)}
+                className="rounded-sm border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground hover:border-vcl-gold/40 transition-colors"
+              >
+                Add
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground">Press Enter or comma to add a tag. Tags are created automatically if they don&apos;t exist.</p>
           </div>
 
           <div className="flex items-center gap-2">
@@ -443,10 +440,14 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
                 <button
                   key={image}
                   type="button"
-                  onClick={() => insertAtCursor(`<img src="${image}" alt="" class="rounded-sm w-full" />`)}
-                  className="relative aspect-video overflow-hidden rounded-sm border border-border hover:border-vcl-gold/40 transition-colors"
+                  onClick={() => insertImageIntoEditor(image)}
+                  title="Click to insert into article body"
+                  className="group relative aspect-video overflow-hidden rounded-sm border border-border hover:border-vcl-gold/40 transition-colors"
                 >
                   <Image src={image} alt="" fill sizes="200px" className="object-cover" unoptimized={isUploadedImage(image)} />
+                  <span className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-bold tracking-widest uppercase text-vcl-gold">
+                    Insert
+                  </span>
                 </button>
               ))}
             </div>
@@ -493,20 +494,4 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
       </form>
     </div>
   );
-}
-
-function ToolbarButton({ children, onClick }: { children: React.ReactNode; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="rounded-sm border border-border bg-card px-2 py-1 text-xs font-semibold text-muted-foreground transition hover:border-vcl-gold/40 hover:text-foreground"
-    >
-      {children}
-    </button>
-  );
-}
-
-function Divider() {
-  return <span className="h-4 w-px bg-border" />;
 }

@@ -29,6 +29,7 @@ export default async function EditArticlePage({ params }: PageProps) {
         author: true,
         league: true,
         publishedAt: true,
+        tags: { select: { id: true, name: true, slug: true } },
       },
     }),
     prisma.uploadedImage.findMany({

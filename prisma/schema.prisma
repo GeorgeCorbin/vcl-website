@@ -76,7 +76,7 @@ model Article {
   status      ArticleStatus @default(DRAFT)
   featured    Boolean       @default(false)
   author      String?
-  league      League?
+  league      String?
   publishedAt DateTime?
   tags        Tag[]
   createdAt   DateTime      @default(now())

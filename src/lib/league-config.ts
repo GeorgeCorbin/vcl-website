@@ -15,6 +15,20 @@ export async function getActiveLeagues() {
   });
 }
 
+export async function resolveLeagueCode(value: FormDataEntryValue | string | null | undefined): Promise<string | null> {
+  if (!value || typeof value !== "string" || !value.trim()) return null;
+
+  const league = await prisma.leagueConfig.findFirst({
+    where: {
+      code: { equals: value.trim(), mode: "insensitive" },
+      active: true,
+    },
+    select: { code: true },
+  });
+
+  return league?.code ?? null;
+}
+
 type LeagueWithRelations = LeagueConfig & {
   conferences: (Conference & { regions: ConferenceRegion[] })[];
   divisions: LeagueDivision[];

@@ -5,14 +5,13 @@ import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { useState, useEffect } from "react";
 
-const leagues = ["All", "MCLA", "SMLL", "NCLL", "WCLL"];
-
 interface ArticlesFilterBarProps {
   activeLeague?: string;
   activeSearch?: string;
+  leagues: { id: string; name: string; code: string }[];
 }
 
-export function ArticlesFilterBar({ activeLeague, activeSearch }: ArticlesFilterBarProps) {
+export function ArticlesFilterBar({ activeLeague, activeSearch, leagues }: ArticlesFilterBarProps) {
   const router = useRouter();
   const [query, setQuery] = useState(activeSearch ?? "");
 
@@ -33,14 +32,16 @@ export function ArticlesFilterBar({ activeLeague, activeSearch }: ArticlesFilter
     router.push(buildHref(activeLeague, query));
   };
 
+  const filterLeagues = ["All", ...leagues.map((l) => l.code)];
+
   return (
     <div className="border-b border-border bg-secondary">
       <div className="mx-auto max-w-[1440px] px-6 md:px-12 py-3 flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-2 flex-wrap">
-          {leagues.map((league) => {
+          {filterLeagues.map((league) => {
             const isActive =
               (!activeLeague && league === "All") ||
-              activeLeague?.toUpperCase() === league;
+              activeLeague?.toUpperCase() === league.toUpperCase();
             return (
               <Link
                 key={league}

@@ -6,6 +6,7 @@ import slugify from "slugify";
 import prisma from "@/lib/db";
 import { uploadFile } from "@/lib/upload";
 import { ArticleStatus } from "@prisma/client";
+import { resolveLeagueCode } from "@/lib/league-config";
 import { readdir } from "fs/promises";
 import { getUploadDirectory, getUploadUrl } from "@/lib/upload-path";
 
@@ -15,6 +16,21 @@ const slugifyInput = (value: string) =>
     strict: true,
     trim: true,
   });
+
+async function upsertTags(tagNames: string[]): Promise<string[]> {
+  if (!tagNames.length) return [];
+  const ids: string[] = [];
+  for (const name of tagNames) {
+    const slug = slugifyInput(name);
+    const tag = await prisma.tag.upsert({
+      where: { slug },
+      update: {},
+      create: { name, slug },
+    });
+    ids.push(tag.id);
+  }
+  return ids;
+}
 
 function normalizeStatus(value: FormDataEntryValue | null): ArticleStatus {
   const upper = (value as string | null)?.toUpperCase();
@@ -59,8 +75,12 @@ export async function createArticle(formData: FormData) {
   const featured = formData.get("featured") === "on";
 
   const author = ((formData.get("author") as string) || "").trim() || null;
+  const league = await resolveLeagueCode(formData.get("league"));
   const existingCover = (formData.get("coverImageCurrent") as string) || null;
   const coverImage = await handleCoverUpload(existingCover, (formData.get("coverImage") as File | null) || null);
+
+  const tagNames = formData.getAll("tags") as string[];
+  const tagIds = await upsertTags(tagNames.filter(Boolean));
 
   await prisma.article.create({
     data: {
@@ -72,7 +92,9 @@ export async function createArticle(formData: FormData) {
       author,
       status,
       featured,
+      league,
       publishedAt: getPublishedAt(status, null),
+      ...(tagIds.length && { tags: { connect: tagIds.map((id) => ({ id })) } }),
     },
   });
 
@@ -104,6 +126,7 @@ export async function updateArticle(formData: FormData) {
   const status = normalizeStatus(formData.get("status"));
   const featured = formData.get("featured") === "on";
   const author = ((formData.get("author") as string) || "").trim() || null;
+  const league = await resolveLeagueCode(formData.get("league"));
   const existingCover = (formData.get("coverImageCurrent") as string) || null;
   const coverImage = await handleCoverUpload(existingCover, formData.get("coverImage") as File | null);
 
@@ -111,6 +134,9 @@ export async function updateArticle(formData: FormData) {
   if (!existing) {
     throw new Error("Article not found.");
   }
+
+  const tagNames = formData.getAll("tags") as string[];
+  const tagIds = await upsertTags(tagNames.filter(Boolean));
 
   await prisma.article.update({
     where: { id },
@@ -123,7 +149,9 @@ export async function updateArticle(formData: FormData) {
       author,
       status,
       featured,
+      league,
       publishedAt: getPublishedAt(status, existing.publishedAt),
+      tags: { set: tagIds.map((id) => ({ id })) },
     },
   });
 

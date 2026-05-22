@@ -2,7 +2,7 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import prisma from "@/lib/db";
-import type { ArticleStatus, League } from "@prisma/client";
+import { ArticleStatus } from "@prisma/client";
 import { deleteArticle } from "./actions";
 import { getActiveLeagues } from "@/lib/league-config";
 
@@ -16,13 +16,13 @@ export const revalidate = 0;
 export default async function ArticlesPage({ searchParams }: PageProps) {
   const { status, league } = await searchParams;
   const normalizedStatus = status?.toUpperCase() as ArticleStatus | undefined;
-  const normalizedLeague = league?.toUpperCase() as League | undefined;
+  const normalizedLeague = league?.trim() || undefined;
 
   const [articles, leagues] = await Promise.all([
     prisma.article.findMany({
       where: {
         ...(normalizedStatus && { status: normalizedStatus }),
-        ...(normalizedLeague && { league: normalizedLeague }),
+        ...(normalizedLeague && { league: { equals: normalizedLeague, mode: "insensitive" } }),
       },
       orderBy: { createdAt: "desc" },
     }),
@@ -125,7 +125,7 @@ export default async function ArticlesPage({ searchParams }: PageProps) {
         ) : (
           <div className="divide-y divide-border">
             {articles.map((article) => (
-              <div key={article.id} className="grid grid-cols-1 md:grid-cols-[1fr_100px_100px_140px_100px] items-center min-h-[56px] px-5 py-3 md:py-0 hover:bg-accent transition-colors">
+              <div key={article.id} className="grid grid-cols-1 md:grid-cols-[1fr_100px_100px_140px_100px] items-center min-h-[64px] px-5 py-4 hover:bg-accent transition-colors">
                 {/* Title */}
                 <div className="flex flex-col gap-0.5">
                   <span className="text-sm font-medium text-foreground">{article.title}</span>
@@ -142,7 +142,7 @@ export default async function ArticlesPage({ searchParams }: PageProps) {
                   )}
                 </div>
                 {/* Status */}
-                <div className="hidden md:flex items-center gap-1.5">
+                <div className="hidden md:flex flex-col items-start gap-1">
                   <span className={`rounded-sm px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase ${
                     article.status === "PUBLISHED"
                       ? "bg-vcl-gold text-vcl-gold-foreground"
@@ -165,7 +165,7 @@ export default async function ArticlesPage({ searchParams }: PageProps) {
                     : format(article.updatedAt, "MMM d, yyyy")}
                 </span>
                 {/* Actions */}
-                <div className="flex items-center justify-end gap-2 mt-2 md:mt-0">
+                <div className="flex items-center justify-end gap-2">
                   <Link
                     href={`/admin/articles/${article.id}`}
                     className="inline-flex items-center gap-1.5 rounded-sm border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:border-vcl-gold/40 hover:text-vcl-gold transition-colors"

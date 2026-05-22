@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { ArticleService } from "@/lib/services";
 import type { ArticleWithRelations } from "@/lib/services/article-service";
+import { getActiveLeagues } from "@/lib/league-config";
 import { ArticlesFilterBar } from "./articles-filter-bar";
 import { ArticlesPagination, PAGE_SIZE } from "./articles-pagination";
 
@@ -16,7 +17,10 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Sea
     ...(params.q && { search: params.q }),
   };
 
-  const totalCount = await ArticleService.count(filters).catch(() => 0);
+  const [totalCount, leagues] = await Promise.all([
+    ArticleService.count(filters).catch(() => 0),
+    getActiveLeagues(),
+  ]);
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
   const requestedPage = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
   const currentPage = Math.min(requestedPage, totalPages);
@@ -46,7 +50,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Sea
       </div>
 
       {/* ── Filter bar ── */}
-      <ArticlesFilterBar activeLeague={params.league} activeSearch={params.q} />
+      <ArticlesFilterBar activeLeague={params.league} activeSearch={params.q} leagues={leagues} />
 
       {/* ── Main content ── */}
       <div className="mx-auto w-full max-w-[1440px] px-6 py-12 md:px-12 md:py-14">
