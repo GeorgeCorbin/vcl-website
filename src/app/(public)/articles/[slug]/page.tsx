@@ -3,8 +3,6 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { SidebarAds, InlineAd } from "@/components/ads";
-
 interface ArticlePageProps {
   params: Promise<{ slug: string }>;
 }
@@ -30,9 +28,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
   return (
     <div className="container mx-auto px-4 py-12 md:px-6 md:py-16">
-      <div className="flex gap-8">
-        {/* Main Content */}
-        <div className="flex-1 min-w-0 max-w-3xl">
+      <div className="max-w-3xl mx-auto">
+        <div>
           <Link href="/articles">
             <Button variant="ghost" className="mb-6">
               <ArrowLeft className="mr-2 h-4 w-4" />
@@ -73,13 +70,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               <p>{article.content}</p>
             </div>
 
-            {/* Inline Ad after article content */}
-            <InlineAd className="mt-8" />
           </article>
         </div>
-
-        {/* Sidebar Ads */}
-        <SidebarAds className="hidden lg:block w-[300px] flex-shrink-0 sticky top-20" />
       </div>
     </div>
   );

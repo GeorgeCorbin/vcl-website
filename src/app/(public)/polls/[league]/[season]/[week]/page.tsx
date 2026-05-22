@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { League } from "@prisma/client";
 import { PollService } from "@/lib/services";
-import { LeaderboardAd, SidebarAds } from "@/components/ads";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ArrowUp, ArrowDown, Minus } from "lucide-react";
+import { FEATURES } from "@/lib/feature-flags";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +31,8 @@ function getRankChange(current: number, previous: number | null) {
 }
 
 export default async function PollDetailPage({ params }: { params: PageParams }) {
+  if (!FEATURES.MEDIA_POLLS) redirect("/");
+
   const { league, season, week } = await params;
   const normalizedLeague = league?.toUpperCase() as League | undefined;
   const weekNumber = Number(week);
@@ -65,10 +67,7 @@ export default async function PollDetailPage({ params }: { params: PageParams })
         </div>
       </div>
 
-      <LeaderboardAd className="mb-8 hidden md:flex" />
-
-      <div className="flex gap-8">
-        <div className="flex-1 space-y-6">
+      <div className="space-y-6">
           <Card className="border-border/50">
             <CardHeader>
               <div className="flex flex-wrap items-center justify-between gap-4">
@@ -134,14 +133,11 @@ export default async function PollDetailPage({ params }: { params: PageParams })
             </CardContent>
           </Card>
 
-          <div className="text-center">
-            <Link href="/polls" className="text-sm text-muted-foreground hover:text-foreground">
-              View Latest Poll →
-            </Link>
-          </div>
+        <div className="text-center">
+          <Link href="/polls" className="text-sm text-muted-foreground hover:text-foreground">
+            View Latest Poll →
+          </Link>
         </div>
-
-        <SidebarAds className="hidden w-[300px] flex-shrink-0 lg:block" />
       </div>
     </div>
   );

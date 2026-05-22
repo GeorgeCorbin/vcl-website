@@ -1,12 +1,16 @@
+import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { getActiveLeagues } from "@/lib/league-config";
 import PollForm from "./poll-form";
+import { FEATURES } from "@/lib/feature-flags";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewPollWeekPage() {
+  if (!FEATURES.MEDIA_POLLS) redirect("/admin");
+
   const leagues = await getActiveLeagues();
   const currentYear = new Date().getFullYear();
 

@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import prisma from "@/lib/db";
 import { Division } from "@prisma/client";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { ArrowLeft, Save, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { updatePollWeek, deletePollWeek, publishPollWeek } from "../actions";
 import PollRankingsManager from "./poll-rankings-manager";
+import { FEATURES } from "@/lib/feature-flags";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,8 @@ const normalizeDivision = (division?: string | null): Division | undefined => {
 };
 
 export default async function EditPollWeekPage({ params }: PageProps) {
+  if (!FEATURES.MEDIA_POLLS) redirect("/admin");
+
   const { id } = await params;
 
   const pollWeek = await prisma.pollWeek.findUnique({

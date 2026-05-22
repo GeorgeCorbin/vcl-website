@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+import { FEATURES } from "@/lib/feature-flags";
 import prisma from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +26,8 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function NewTransferPage() {
+  if (!FEATURES.TRANSFERS) redirect("/admin");
+
   const [teams, leagues] = await Promise.all([
     prisma.team.findMany({
       where: { active: true },

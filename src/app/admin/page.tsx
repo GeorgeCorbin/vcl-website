@@ -1,23 +1,25 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, BarChart3, ArrowLeftRight, Users } from "lucide-react";
+import { FileText, BarChart3, Users } from "lucide-react";
 import Link from "next/link";
 import prisma from "@/lib/db";
 import { formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { FEATURES } from "@/lib/feature-flags";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboard() {
+  const showMediaPolls = FEATURES.MEDIA_POLLS;
+
   // Fetch stats in parallel
-  const [articlesCount, publishedPollsCount, confirmedTransfersCount, activeTeamsCount] = await Promise.all([
+  const [articlesCount, publishedPollsCount, activeTeamsCount] = await Promise.all([
     prisma.article.count(),
-    prisma.pollWeek.count({ where: { status: "PUBLISHED" } }),
-    prisma.transfer.count({ where: { confirmed: true } }),
+    showMediaPolls ? prisma.pollWeek.count({ where: { status: "PUBLISHED" } }) : Promise.resolve(0),
     prisma.team.count({ where: { active: true } }),
   ]);
 
   // Fetch recent activity
-  const [recentArticles, recentPolls, recentTransfers] = await Promise.all([
+  const [recentArticles, recentPolls] = await Promise.all([
     prisma.article.findMany({
       take: 3,
       orderBy: { createdAt: "desc" },
@@ -29,37 +31,26 @@ export default async function AdminDashboard() {
         league: true,
       },
     }),
-    prisma.pollWeek.findMany({
-      take: 3,
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        weekNumber: true,
-        season: true,
-        league: true,
-        status: true,
-        createdAt: true,
-      },
-    }),
-    prisma.transfer.findMany({
-      take: 3,
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        playerName: true,
-        fromTeam: true,
-        toTeam: true,
-        confirmed: true,
-        createdAt: true,
-      },
-    }),
+    showMediaPolls
+      ? prisma.pollWeek.findMany({
+          take: 3,
+          orderBy: { createdAt: "desc" },
+          select: {
+            id: true,
+            weekNumber: true,
+            season: true,
+            league: true,
+            status: true,
+            createdAt: true,
+          },
+        })
+      : Promise.resolve([]),
   ]);
 
   // Combine and sort all activities by date
   const allActivities = [
     ...recentArticles.map(a => ({ type: "article" as const, data: a, date: a.createdAt })),
-    ...recentPolls.map(p => ({ type: "poll" as const, data: p, date: p.createdAt })),
-    ...recentTransfers.map(t => ({ type: "transfer" as const, data: t, date: t.createdAt })),
+    ...(showMediaPolls ? recentPolls.map(p => ({ type: "poll" as const, data: p, date: p.createdAt })) : []),
   ].sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 5);
 
   const stats = [
@@ -70,20 +61,15 @@ export default async function AdminDashboard() {
       icon: FileText,
       href: "/admin/articles",
     },
-    {
-      title: "Media Polls",
-      value: publishedPollsCount.toString(),
-      description: "Published polls",
-      icon: BarChart3,
-      href: "/admin/polls",
-    },
-    {
-      title: "Transfers",
-      value: confirmedTransfersCount.toString(),
-      description: "Confirmed transfers",
-      icon: ArrowLeftRight,
-      href: "/admin/transfers",
-    },
+    ...(showMediaPolls
+      ? [{
+          title: "Media Polls",
+          value: publishedPollsCount.toString(),
+          description: "Published polls",
+          icon: BarChart3,
+          href: "/admin/polls",
+        }]
+      : []),
     {
       title: "Teams",
       value: activeTeamsCount.toString(),
@@ -101,7 +87,7 @@ export default async function AdminDashboard() {
         </p>
       </div>
 
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 auto-rows-fr">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-3 auto-rows-fr">
         {stats.map((stat) => (
           <Link key={stat.title} href={stat.href}>
             <Card className="hover:bg-accent/50 transition-colors cursor-pointer h-full">
@@ -137,24 +123,17 @@ export default async function AdminDashboard() {
                 Write and publish a new article
               </div>
             </Link>
-            <Link
-              href="/admin/polls/new"
-              className="block p-3 rounded-lg border border-border/50 hover:bg-accent hover:border-vcl-gold/50 transition-colors"
-            >
-              <div className="font-medium text-sm md:text-base">Create New Poll</div>
-              <div className="text-xs md:text-sm text-muted-foreground">
-                Set up a new weekly media poll
-              </div>
-            </Link>
-            <Link
-              href="/admin/transfers/new"
-              className="block p-3 rounded-lg border border-border/50 hover:bg-accent hover:border-vcl-gold/50 transition-colors"
-            >
-              <div className="font-medium text-sm md:text-base">Add Transfer</div>
-              <div className="text-xs md:text-sm text-muted-foreground">
-                Record a new player transfer
-              </div>
-            </Link>
+            {showMediaPolls && (
+              <Link
+                href="/admin/polls/new"
+                className="block p-3 rounded-lg border border-border/50 hover:bg-accent hover:border-vcl-gold/50 transition-colors"
+              >
+                <div className="font-medium text-sm md:text-base">Create New Poll</div>
+                <div className="text-xs md:text-sm text-muted-foreground">
+                  Set up a new weekly media poll
+                </div>
+              </Link>
+            )}
           </CardContent>
         </Card>
 
@@ -174,7 +153,6 @@ export default async function AdminDashboard() {
                     <div className="mt-0.5">
                       {activity.type === "article" && <FileText className="h-4 w-4 text-muted-foreground" />}
                       {activity.type === "poll" && <BarChart3 className="h-4 w-4 text-muted-foreground" />}
-                      {activity.type === "transfer" && <ArrowLeftRight className="h-4 w-4 text-muted-foreground" />}
                     </div>
                     <div className="flex-1 min-w-0">
                       {activity.type === "article" && (
@@ -202,24 +180,6 @@ export default async function AdminDashboard() {
                             <Badge variant={activity.data.status === "PUBLISHED" ? "default" : "secondary"} className="text-xs">
                               {activity.data.status}
                             </Badge>
-                            <span className="text-xs text-muted-foreground">
-                              {formatDistanceToNow(activity.data.createdAt, { addSuffix: true })}
-                            </span>
-                          </div>
-                        </>
-                      )}
-                      {activity.type === "transfer" && (
-                        <>
-                          <Link href={`/admin/transfers`} className="font-medium hover:underline line-clamp-1">
-                            {activity.data.playerName}
-                          </Link>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs text-muted-foreground">
-                              {activity.data.fromTeam?.name ?? "Free Agent"} → {activity.data.toTeam?.name ?? "TBD"}
-                            </span>
-                            {activity.data.confirmed && (
-                              <Badge variant="default" className="text-xs">Confirmed</Badge>
-                            )}
                             <span className="text-xs text-muted-foreground">
                               {formatDistanceToNow(activity.data.createdAt, { addSuffix: true })}
                             </span>

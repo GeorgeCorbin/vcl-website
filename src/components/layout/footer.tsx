@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { FaInstagram, FaXTwitter, FaYoutube, FaLock } from "react-icons/fa6";
+import { FEATURES } from "@/lib/feature-flags";
 
 export function Footer() {
   return (
@@ -34,16 +35,13 @@ export function Footer() {
                   Articles
                 </Link>
               </li>
-              <li>
-                <Link href="/polls" className="hover:text-foreground">
-                  Media Poll
-                </Link>
-              </li>
-              <li>
-                <Link href="/transfers" className="hover:text-foreground">
-                  Transfers
-                </Link>
-              </li>
+              {FEATURES.MEDIA_POLLS && (
+                <li>
+                  <Link href="/polls" className="hover:text-foreground">
+                    Media Poll
+                  </Link>
+                </li>
+              )}
             </ul>
           </div>
 

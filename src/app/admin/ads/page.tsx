@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+import { FEATURES } from "@/lib/feature-flags";
 import Link from "next/link";
 import { format } from "date-fns";
 import { Plus, Pencil, Trash2, Eye, EyeOff } from "lucide-react";
@@ -19,6 +21,8 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function AdsManagementPage() {
+  if (!FEATURES.ADS_ADMIN) redirect("/admin");
+
   const ads = await prisma.adUnit.findMany({
     orderBy: { createdAt: "desc" },
   });

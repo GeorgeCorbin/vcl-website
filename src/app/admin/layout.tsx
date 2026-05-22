@@ -7,32 +7,36 @@ import {
   FileText,
   Users,
   BarChart3,
-  ArrowLeftRight,
   Settings,
   Home,
   Menu,
   LogOut,
   ExternalLink,
   FileEdit,
-  MonitorPlay,
   Trophy,
-  DollarSign,
+  ArrowLeftRight,
+  Megaphone,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useEffect, useState } from "react";
+import { FEATURES } from "@/lib/feature-flags";
 
-const navItems = [
-  { href: "/admin", label: "Dashboard", icon: Home },
-  { href: "/admin/articles", label: "Articles", icon: FileText },
-  { href: "/admin/teams", label: "Teams", icon: Users },
-  { href: "/admin/polls", label: "Media Polls", icon: BarChart3 },
-  { href: "/admin/transfers", label: "Transfers", icon: ArrowLeftRight },
-  { href: "/admin/leagues", label: "Leagues", icon: Trophy },
-  { href: "/admin/content", label: "Content", icon: FileEdit },
-  { href: "/admin/ads", label: "Ads", icon: DollarSign },
-  { href: "/admin/settings", label: "Settings", icon: Settings },
+const allNavItems = [
+  { href: "/admin", label: "Dashboard", icon: Home, feature: null },
+  { href: "/admin/articles", label: "Articles", icon: FileText, feature: null },
+  { href: "/admin/teams", label: "Teams", icon: Users, feature: null },
+  { href: "/admin/polls", label: "Media Polls", icon: BarChart3, feature: "MEDIA_POLLS" as const },
+  { href: "/admin/transfers", label: "Transfers", icon: ArrowLeftRight, feature: "TRANSFERS" as const },
+  { href: "/admin/leagues", label: "Leagues", icon: Trophy, feature: null },
+  { href: "/admin/content", label: "Content", icon: FileEdit, feature: null },
+  { href: "/admin/ads", label: "Ads", icon: Megaphone, feature: "ADS_ADMIN" as const },
+  { href: "/admin/settings", label: "Settings", icon: Settings, feature: null },
 ];
+
+const navItems = allNavItems.filter(
+  (item) => item.feature === null || FEATURES[item.feature]
+);
 
 function Sidebar({ className }: { className?: string }) {
   const pathname = usePathname();

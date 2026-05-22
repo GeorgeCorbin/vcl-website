@@ -1,5 +1,15 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
+import { FEATURES } from "@/lib/feature-flags";
+
+function missionFocusText() {
+  const parts = ["news", "analysis"];
+  if (FEATURES.MEDIA_POLLS) parts.push("rankings");
+  if (FEATURES.TRANSFERS) parts.push("transfer information");
+  if (parts.length === 1) return parts[0];
+  if (parts.length === 2) return `${parts[0]} and ${parts[1]}`;
+  return `${parts.slice(0, -1).join(", ")}, and ${parts[parts.length - 1]}`;
+}
 
 export default function AboutPage() {
   return (
@@ -31,8 +41,7 @@ export default function AboutPage() {
               Varsity Club Lacrosse is dedicated to providing in-depth coverage of club lacrosse. 
               While our primary focus is on the Men&apos;s Collegiate Lacrosse Association (MCLA), 
               we also cover SMLL, NCLL, WCLL, and other club leagues. We aim to be the go-to
-              destination for news, analysis, rankings, and transfer information
-              for the club lacrosse community.
+              destination for {missionFocusText()} for the club lacrosse community.
             </p>
           </section>
 
@@ -51,29 +60,33 @@ export default function AboutPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-border/50">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base md:text-lg">Weekly Media Poll</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    Comprehensive weekly rankings of the top 25 teams in MCLA
-                    Division I and Division II.
-                  </p>
-                </CardContent>
-              </Card>
+              {FEATURES.MEDIA_POLLS && (
+                <Card className="border-border/50">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base md:text-lg">Weekly Media Poll</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Comprehensive weekly rankings of the top 25 teams in MCLA
+                      Division I and Division II.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
 
-              <Card className="border-border/50">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base md:text-lg">Transfer Tracker</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    Stay updated on player movements between programs throughout
-                    the offseason and beyond.
-                  </p>
-                </CardContent>
-              </Card>
+              {FEATURES.TRANSFERS && (
+                <Card className="border-border/50">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base md:text-lg">Transfer Tracker</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Stay updated on player movements between programs throughout
+                      the offseason and beyond.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
 
               <Card className="border-border/50">
                 <CardHeader className="pb-2">

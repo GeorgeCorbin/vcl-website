@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { FEATURES } from "@/lib/feature-flags";
 import { BottomAdBanner } from "@/components/ads";
 
 const geistSans = Geist({
@@ -16,7 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Varsity Club Lacrosse",
-  description: "Strictly Club. Strictly Business. Your source for MCLA, SMLL, NCLL, WCLL lacrosse news, rankings, transfers, and analysis.",
+  description: "Strictly Club. Strictly Business. Your source for MCLA, SMLL, NCLL, WCLL lacrosse news, rankings, and analysis.",
   icons: {
     icon: "/vcl_logo3.png",
   },
@@ -32,7 +33,7 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
         <Toaster />
-        <BottomAdBanner />
+        {FEATURES.ADS_PUBLIC && <BottomAdBanner />}
       </body>
     </html>
   );

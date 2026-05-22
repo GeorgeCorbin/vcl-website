@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -10,12 +11,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ArrowUp, ArrowDown, Minus } from "lucide-react";
-import { SidebarAds, LeaderboardAd } from "@/components/ads";
 import { PollService } from "@/lib/services";
 import { getActiveLeagues, getDivisionsForLeague } from "@/lib/league-config";
 import { League } from "@prisma/client";
 import PollsSelector from "./polls-selector";
 import prisma from "@/lib/db";
+import { FEATURES } from "@/lib/feature-flags";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,8 @@ type PageProps = {
 };
 
 export default async function PollsPage({ searchParams }: PageProps) {
+  if (!FEATURES.MEDIA_POLLS) redirect("/");
+
   const params = await searchParams;
   const leagues = await getActiveLeagues();
   
@@ -139,12 +142,8 @@ export default async function PollsPage({ searchParams }: PageProps) {
         />
       </div>
 
-      {/* Leaderboard Ad */}
-      <LeaderboardAd className="mb-8 hidden md:flex" />
-
-      <div className="flex gap-8">
-        {/* Main Content */}
-        <div className="flex-1 min-w-0">
+      <div>
+        <div>
           {!latestPoll ? (
             <Card className="border-border/50">
               <CardContent className="py-16 text-center">
@@ -240,9 +239,6 @@ export default async function PollsPage({ searchParams }: PageProps) {
               </div>
           )}
         </div>
-
-        {/* Sidebar Ads */}
-        <SidebarAds className="hidden lg:block w-[300px] flex-shrink-0 sticky top-20" />
       </div>
     </div>
   );

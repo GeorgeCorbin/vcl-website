@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { format } from "date-fns";
 import { Plus, Pencil, Trash2, Eye } from "lucide-react";
@@ -15,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { deletePollWeek } from "./actions";
 import { getActiveLeagues } from "@/lib/league-config";
+import { FEATURES } from "@/lib/feature-flags";
 
 type PageProps = {
   searchParams: Promise<{ league?: string; status?: string; division?: string }>;
@@ -24,6 +26,8 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function PollsPage({ searchParams }: PageProps) {
+  if (!FEATURES.MEDIA_POLLS) redirect("/admin");
+
   const { league, status, division } = await searchParams;
   const normalizedLeague = league?.toUpperCase() as League | undefined;
   const normalizedStatus = status?.toUpperCase() as PollStatus | undefined;

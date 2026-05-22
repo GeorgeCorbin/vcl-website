@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { SidebarAds, LeaderboardAd } from "@/components/ads";
-
 export default function ArticlesPage() {
   // TODO: Fetch articles from API
   const articles: Array<{
@@ -25,12 +23,8 @@ export default function ArticlesPage() {
         </p>
       </div>
 
-      {/* Leaderboard Ad */}
-      <LeaderboardAd className="mb-8 hidden md:flex" />
-
-      <div className="flex gap-8">
-        {/* Main Content */}
-        <div className="flex-1 min-w-0">
+      <div>
+        <div>
           {articles.length === 0 ? (
             <Card className="border-border/50">
               <CardContent className="py-16 text-center">
@@ -74,9 +68,6 @@ export default function ArticlesPage() {
             </div>
           )}
         </div>
-
-        {/* Sidebar Ads */}
-        <SidebarAds className="hidden lg:block w-[300px] flex-shrink-0 sticky top-20" />
       </div>
     </div>
   );

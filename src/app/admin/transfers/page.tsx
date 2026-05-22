@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+import { FEATURES } from "@/lib/feature-flags";
 import Link from "next/link";
 import { format } from "date-fns";
 import { Plus, Pencil, Trash2, ArrowRight } from "lucide-react";
@@ -24,6 +26,8 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function TransfersPage({ searchParams }: PageProps) {
+  if (!FEATURES.TRANSFERS) redirect("/admin");
+
   const { league, confirmed } = await searchParams;
   const normalizedLeague = league?.toUpperCase() as League | undefined;
   const confirmedFilter = confirmed === "true" ? true : confirmed === "false" ? false : undefined;
