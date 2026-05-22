@@ -195,6 +195,24 @@ npm run build
 
 Set `DATABASE_URL` in your hosting environment and run migrations against the production database before going live.
 
+### Self-hosted (Lightsail, VPS)
+
+Article and cover images are stored on disk, not in the database. By default they go to `public/uploads`, which is **gitignored** and is **lost on every deploy** if you pull a fresh copy of the app.
+
+On a persistent server, set a directory outside the deploy folder:
+
+```bash
+mkdir -p ~/vcl-data/uploads
+```
+
+```env
+UPLOAD_DIR=/home/ubuntu/vcl-data/uploads
+```
+
+Restart the app after changing `.env`. Re-upload any images that were saved before this was configured, or copy existing files from `public/uploads` into the new directory.
+
+Images are served at `/uploads/...` via the app, so they work whether files live under `public/uploads` or a custom `UPLOAD_DIR`.
+
 ## License
 
 MIT

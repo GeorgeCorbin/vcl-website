@@ -10,6 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Lock } from "lucide-react";
 import Image from "next/image";
 
+const DEV_ADMIN_EMAIL = "a@a";
+const DEV_ADMIN_PASSWORD = "a";
+
 export default function AdminLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -24,7 +27,7 @@ export default function AdminLoginPage() {
 
     // TODO: Replace with actual authentication
     // For now, using a simple check - replace with NextAuth or similar
-    if (email === "a@a" && password === "a") {
+    if (email === DEV_ADMIN_EMAIL && password === DEV_ADMIN_PASSWORD) {
       // Set a simple session cookie (replace with proper auth)
       document.cookie = "vcl_admin_session=authenticated; path=/; max-age=86400";
       router.push("/admin");
@@ -36,7 +39,7 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-muted/30 px-4 py-8">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
@@ -103,6 +106,27 @@ export default function AdminLoginPage() {
           </p>
         </CardContent>
       </Card>
+
+      {process.env.NODE_ENV === "development" && (
+        <div className="w-full max-w-md rounded-lg border border-dashed border-amber-500/50 bg-amber-500/5 px-4 py-3 text-sm">
+          <p className="font-semibold text-amber-700 dark:text-amber-400">Test admin (dev only)</p>
+          <dl className="mt-2 space-y-1 text-muted-foreground">
+            <div className="flex gap-2">
+              <dt className="shrink-0 font-medium text-foreground">Email:</dt>
+              <dd>
+                <code className="rounded bg-muted px-1.5 py-0.5 text-xs">{DEV_ADMIN_EMAIL}</code>
+              </dd>
+            </div>
+            <div className="flex gap-2">
+              <dt className="shrink-0 font-medium text-foreground">Password:</dt>
+              <dd>
+                <code className="rounded bg-muted px-1.5 py-0.5 text-xs">{DEV_ADMIN_PASSWORD}</code>
+              </dd>
+            </div>
+          </dl>
+          <p className="mt-2 text-xs text-muted-foreground">Remove before production.</p>
+        </div>
+      )}
     </div>
   );
 }

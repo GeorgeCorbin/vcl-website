@@ -6,8 +6,8 @@ import slugify from "slugify";
 import prisma from "@/lib/db";
 import { uploadFile } from "@/lib/upload";
 import { ArticleStatus } from "@prisma/client";
-import { join } from "path";
 import { readdir } from "fs/promises";
+import { getUploadDirectory, getUploadUrl } from "@/lib/upload-path";
 
 const slugifyInput = (value: string) =>
   slugify(value, {
@@ -164,12 +164,12 @@ export async function uploadImageAction(formData: FormData): Promise<{ path?: st
 
 export async function getUploadedImages(): Promise<string[]> {
   try {
-    const uploadDir = join(process.cwd(), "public/uploads");
+    const uploadDir = getUploadDirectory();
     const files = await readdir(uploadDir);
     const imageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"];
     return files
       .filter((file) => imageExtensions.some((ext) => file.toLowerCase().endsWith(ext)))
-      .map((file) => `/uploads/${file}`);
+      .map((file) => getUploadUrl(file));
   } catch {
     return [];
   }

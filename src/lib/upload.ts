@@ -2,6 +2,7 @@
 
 import { mkdir, writeFile } from "fs/promises";
 import { join } from "path";
+import { getUploadDirectory, getUploadUrl } from "@/lib/upload-path";
 
 const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
 
@@ -16,10 +17,10 @@ export async function uploadFile(file: File | null): Promise<string | null> {
   const buffer = Buffer.from(bytes);
   const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, "");
   const filename = `${Date.now()}-${sanitizedName || "upload"}`;
-  const uploadDir = join(process.cwd(), "public/uploads");
+  const uploadDir = getUploadDirectory();
 
   await mkdir(uploadDir, { recursive: true });
   await writeFile(join(uploadDir, filename), buffer);
 
-  return `/uploads/${filename}`;
+  return getUploadUrl(filename);
 }
