@@ -3,17 +3,29 @@ import { ArrowRight } from "lucide-react";
 import { ArticleService } from "@/lib/services";
 import type { ArticleWithRelations } from "@/lib/services/article-service";
 import { ArticlesFilterBar } from "./articles-filter-bar";
+import { ArticlesPagination, PAGE_SIZE } from "./articles-pagination";
 
-type SearchParams = Promise<{ league?: string; tag?: string; q?: string }>;
+type SearchParams = Promise<{ league?: string; tag?: string; q?: string; page?: string }>;
 
 export default async function ArticlesPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
-  const articles = await ArticleService.list({
-    status: "PUBLISHED",
-    limit: 12,
+  const filters = {
+    status: "PUBLISHED" as const,
     ...(params.tag && { tagSlug: params.tag }),
     ...(params.league && { league: params.league }),
     ...(params.q && { search: params.q }),
+  };
+
+  const totalCount = await ArticleService.count(filters).catch(() => 0);
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const requestedPage = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
+  const currentPage = Math.min(requestedPage, totalPages);
+  const offset = (currentPage - 1) * PAGE_SIZE;
+
+  const articles = await ArticleService.list({
+    ...filters,
+    limit: PAGE_SIZE,
+    offset,
   }).catch(() => []);
 
   return (
@@ -103,20 +115,13 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Sea
               </div>
             )}
 
-            {/* Pagination */}
-            {articles.length > 0 && (
-              <div className="flex items-center justify-center gap-1 pt-4">
-                <span className="flex items-center justify-center w-9 h-9 rounded-sm border border-border text-xs text-muted-foreground">
-                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-                </span>
-                <span className="flex items-center justify-center w-9 h-9 rounded-sm bg-vcl-gold text-xs font-bold text-vcl-gold-foreground">1</span>
-                <span className="flex items-center justify-center w-9 h-9 rounded-sm border border-border text-xs text-muted-foreground">2</span>
-                <span className="flex items-center justify-center w-9 h-9 rounded-sm border border-border text-xs text-muted-foreground">3</span>
-                <span className="flex items-center justify-center w-9 h-9 rounded-sm border border-border text-xs text-muted-foreground">
-                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-                </span>
-              </div>
-            )}
+            <ArticlesPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              league={params.league}
+              tag={params.tag}
+              q={params.q}
+            />
           </div>
 
           {/* Sidebar */}

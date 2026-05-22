@@ -15,38 +15,53 @@ const normalizeLeague = (value?: string | League | null): League | null | undefi
   return undefined;
 };
 
+type ArticleListFilterOptions = {
+  status?: ArticleStatus;
+  featured?: boolean;
+  tagSlug?: string;
+  league?: string | League | null;
+  search?: string;
+};
+
+function buildArticleListWhere(options?: ArticleListFilterOptions): Prisma.ArticleWhereInput {
+  const { status, featured, tagSlug, league, search } = options || {};
+  const normalizedLeague = normalizeLeague(league);
+
+  return {
+    ...(status && { status }),
+    ...(featured !== undefined && { featured }),
+    ...(tagSlug && { tags: { some: { slug: tagSlug } } }),
+    ...(normalizedLeague && { league: normalizedLeague }),
+    ...(search && {
+      OR: [
+        { title: { contains: search, mode: "insensitive" } },
+        { excerpt: { contains: search, mode: "insensitive" } },
+      ],
+    }),
+  };
+}
+
 export class ArticleService {
-  static async list(options?: {
-    status?: ArticleStatus;
-    featured?: boolean;
-    tagSlug?: string;
-    league?: string | League | null;
-    search?: string;
+  static async list(options?: ArticleListFilterOptions & {
     limit?: number;
     offset?: number;
   }) {
-    const { status, featured, tagSlug, league, search, limit = 20, offset = 0 } = options || {};
-    const normalizedLeague = normalizeLeague(league);
+    const { limit = 20, offset = 0, ...filters } = options || {};
 
     return prisma.article.findMany({
-      where: {
-        ...(status && { status }),
-        ...(featured !== undefined && { featured }),
-        ...(tagSlug && { tags: { some: { slug: tagSlug } } }),
-        ...(normalizedLeague && { league: normalizedLeague }),
-        ...(search && {
-          OR: [
-            { title: { contains: search, mode: "insensitive" } },
-            { excerpt: { contains: search, mode: "insensitive" } },
-          ],
-        }),
-      },
+      where: buildArticleListWhere(filters),
       include: {
         tags: true,
       },
       orderBy: { publishedAt: "desc" },
       take: limit,
       skip: offset,
+    });
+  }
+
+  static async count(options?: ArticleListFilterOptions) {
+    return prisma.article.count({
+      where: buildArticleListWhere(options),
     });
   }
 
