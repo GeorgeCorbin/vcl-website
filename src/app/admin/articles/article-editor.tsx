@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useMemo, useRef, useState, useTransition } from "react";
 import { uploadImageAction } from "./actions";
+import { isUploadedImage } from "@/lib/upload-path";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -250,7 +251,7 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
           <div className="prose prose-invert max-w-none">
             {coverPreview && (
               <div className="relative mb-6 aspect-video w-full overflow-hidden rounded-sm">
-                <Image src={coverPreview} alt="Cover" fill className="object-cover" sizes="800px" />
+                <Image src={coverPreview} alt="Cover" fill className="object-cover" sizes="800px" unoptimized={isUploadedImage(coverPreview)} />
               </div>
             )}
             <h1>{title || "Untitled Article"}</h1>
@@ -405,7 +406,7 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
           </div>
           {coverPreview ? (
             <div className="relative aspect-video w-full max-w-md overflow-hidden rounded-sm border border-border">
-              <Image src={coverPreview} alt="Cover preview" fill className="object-cover" sizes="400px" />
+              <Image src={coverPreview} alt="Cover preview" fill className="object-cover" sizes="400px" unoptimized={isUploadedImage(coverPreview)} />
               <button
                 type="button"
                 onClick={() => { setCoverPreview(""); setCoverFile(null); setCoverError(null); }}
@@ -445,7 +446,7 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
                   onClick={() => insertAtCursor(`<img src="${image}" alt="" class="rounded-sm w-full" />`)}
                   className="relative aspect-video overflow-hidden rounded-sm border border-border hover:border-vcl-gold/40 transition-colors"
                 >
-                  <Image src={image} alt="" fill sizes="200px" className="object-cover" />
+                  <Image src={image} alt="" fill sizes="200px" className="object-cover" unoptimized={isUploadedImage(image)} />
                 </button>
               ))}
             </div>

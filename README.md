@@ -197,21 +197,34 @@ Set `DATABASE_URL` in your hosting environment and run migrations against the pr
 
 ### Self-hosted (Lightsail, VPS)
 
-Article and cover images are stored on disk, not in the database. By default they go to `public/uploads`, which is **gitignored** and is **lost on every deploy** if you pull a fresh copy of the app.
+This matches the approach used on the SMLL site (`smll`).
 
-On a persistent server, set a directory outside the deploy folder:
+Uploads are written to disk and the database only stores the URL (e.g. `/uploads/1234-photo.jpg`). By default that path is `public/uploads/`, which is gitignored.
+
+**Why uploads disappear after deploy:** deploy scripts that run `git clean -fd` (including SMLL’s GitHub Actions workflow) delete untracked files under `public/uploads/`. The article row still points at `/uploads/...`, but the file is gone — broken image.
+
+**Fix — persistent uploads directory** (same pattern as SMLL’s `UPLOADS_DIR`):
 
 ```bash
 mkdir -p ~/vcl-data/uploads
 ```
 
 ```env
-UPLOAD_DIR=/home/ubuntu/vcl-data/uploads
+UPLOADS_DIR=/home/ubuntu/vcl-data/uploads
 ```
 
-Restart the app after changing `.env`. Re-upload any images that were saved before this was configured, or copy existing files from `public/uploads` into the new directory.
+Restart the app after changing `.env` (`pm2 restart vcl --update-env` or equivalent). Re-upload affected cover images, or copy any surviving files from `public/uploads/` into the new folder.
 
-Images are served at `/uploads/...` via the app, so they work whether files live under `public/uploads` or a custom `UPLOAD_DIR`.
+**Serving uploads:** SMLL serves `/uploads/` directly from Nginx. VCL also includes an app route at `/uploads/[...path]` so images work even without an Nginx alias. For production, you can add either:
+
+```nginx
+# Optional: serve uploads from disk without hitting Node
+location /uploads/ {
+    alias /home/ubuntu/vcl-data/uploads/;
+}
+```
+
+**Admin image previews:** Next.js `Image` components use `unoptimized` for `/uploads/` paths (same as SMLL) to avoid 400 errors from the Image Optimization API behind Nginx/PM2.
 
 ## License
 
