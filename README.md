@@ -1,13 +1,18 @@
-# VCL Website
+# Varsity Club Lacrosse (VCL) Website
 
-Your source for MCLA lacrosse coverage - news, rankings, transfers, and analysis.
+Club lacrosse coverage — articles, weekly media polls, and league data. Built with Next.js and PostgreSQL.
+
+**Current product focus:** articles first, rankings (media polls) second. Transfers and admin ad management are feature-flagged off by default but can be re-enabled without code changes.
 
 ## Tech Stack
 
-- **Framework**: Next.js 14 (App Router)
-- **Styling**: TailwindCSS + shadcn/ui
-- **Database**: PostgreSQL with Prisma ORM
-- **Authentication**: NextAuth.js (ready to configure)
+| Layer | Technology |
+|-------|------------|
+| Framework | Next.js 16 (App Router), React 19 |
+| Styling | Tailwind CSS v4, shadcn/ui |
+| Database | PostgreSQL via Prisma 7 (`@prisma/adapter-pg`) |
+| Auth (admin) | Cookie session (`/admin/login`) — NextAuth is in dependencies for future use |
+| Forms | Server Actions, react-hook-form, Zod |
 
 ## Getting Started
 
@@ -18,156 +23,178 @@ Your source for MCLA lacrosse coverage - news, rankings, transfers, and analysis
 
 ### Installation
 
-1. Clone the repository:
+1. Clone the repository and install dependencies:
+
 ```bash
 git clone <repo-url>
 cd vcl-website
-```
-
-2. Install dependencies:
-```bash
 npm install
 ```
 
-3. Set up environment variables:
-```bash
-cp .env.example .env
-```
+`postinstall` runs `prisma generate` automatically.
 
-Edit `.env` and update the `DATABASE_URL` with your PostgreSQL connection string:
-```
+2. Create a `.env` file in the project root:
+
+```env
 DATABASE_URL="postgresql://user:password@localhost:5432/vcl_website?schema=public"
 ```
 
-4. Generate Prisma client and run migrations:
-```bash
-npx prisma generate
-npx prisma migrate dev --name init
-```
+3. Apply migrations and start the dev server:
 
-5. Start the development server:
 ```bash
+npx prisma migrate dev
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to view the site.
+Open [http://localhost:3000](http://localhost:3000).
+
+### Admin access
+
+- URL: [http://localhost:3000/admin](http://localhost:3000/admin)
+- Default dev login is configured in `src/app/admin/login/page.tsx` (replace with proper auth before production).
+
+## Feature Flags
+
+Toggle features in `src/lib/feature-flags.ts`. When a flag is `false`, related UI is hidden; database models and backend code stay in place so you can turn features back on later.
+
+| Flag | Default | Controls |
+|------|---------|----------|
+| `MEDIA_POLLS` | `false` | Public `/polls` routes, nav links, home cards; admin Media Polls section |
+| `TRANSFERS` | `false` | Public `/transfers`, nav, home card; admin Transfers section |
+| `ADS_ADMIN` | `false` | Admin Ad Management (`/admin/ads`) |
+| `ADS_PUBLIC` | `true` | Public ad slots (e.g. bottom banner in root layout) |
+
+Disabled routes redirect to home or `/admin` if visited directly.
 
 ## Project Structure
 
 ```
 vcl-website/
+├── prisma/
+│   ├── schema.prisma
+│   └── migrations/
+├── public/
 ├── src/
 │   ├── app/
-│   │   ├── (public)/          # Public pages (Home, Articles, Polls, etc.)
-│   │   ├── admin/             # Admin panel (protected)
-│   │   └── api/               # API routes
+│   │   ├── (public)/          # Marketing + content (articles, polls, about, …)
+│   │   ├── admin/             # CMS / operations panel
+│   │   ├── api/               # REST JSON routes
+│   │   ├── layout.tsx         # Root layout
+│   │   └── globals.css
 │   ├── components/
-│   │   ├── ui/                # shadcn/ui components
-│   │   └── layout/            # Header, Footer
-│   └── lib/
-│       ├── db.ts              # Prisma client
-│       └── services/          # Business logic services
-├── prisma/
-│   └── schema.prisma          # Database schema
-└── public/
+│   │   ├── ads/               # Ad slot components (gated by ADS_PUBLIC)
+│   │   ├── layout/            # Header, Footer
+│   │   └── ui/                # shadcn/ui
+│   ├── lib/
+│   │   ├── db.ts              # Prisma client
+│   │   ├── feature-flags.ts
+│   │   ├── league-config.ts
+│   │   ├── services/          # ArticleService, PollService, etc.
+│   │   └── upload.ts
+│   └── proxy.ts               # Admin route protection
+├── package.json
+└── prisma.config.ts
 ```
 
 ## Features
 
-### Public Pages
-- **Home** (`/`) - Landing page with featured content
-- **Articles** (`/articles`) - News and analysis
-- **Media Poll** (`/polls`) - Weekly team rankings
-- **Transfers** (`/transfers`) - Player transfer tracker
-- **About** (`/about`) - About VCL
+### Public site
 
-### Admin Panel (`/admin`)
-- **Dashboard** - Overview and quick actions
-- **Articles** - Create, edit, publish articles
-- **Polls** - Manage weekly media polls
-- **Transfers** - Track player transfers
-- **Teams** - Manage team database
-- **Settings** - Site configuration
+| Route | Description | Notes |
+|-------|-------------|--------|
+| `/` | Home | Hero, feature cards, latest articles |
+| `/articles` | Article index | Wire to `ArticleService` (in progress) |
+| `/articles/[slug]` | Article detail | |
+| `/polls` | Media poll / rankings | Requires `MEDIA_POLLS` |
+| `/transfers` | Transfer tracker | Requires `TRANSFERS` |
+| `/about` | About VCL | Copy respects feature flags |
+| `/privacy`, `/terms` | Legal pages | |
+
+### Admin panel (`/admin`)
+
+| Section | Description |
+|---------|-------------|
+| Dashboard | Stats, quick actions, recent activity |
+| Articles | Create, edit, publish (rich HTML editor) |
+| Media Polls | Weekly rankings (flag: `MEDIA_POLLS`) |
+| Transfers | Player movements (flag: `TRANSFERS`) |
+| Teams | Team database for polls/transfers |
+| Leagues | League config and divisions |
+| Content | Static pages (about, etc.) |
+| Ads | Ad unit CRUD (flag: `ADS_ADMIN`) — public ads are intended to be managed in code |
+| Settings | Site configuration |
 
 ## API Endpoints
 
 | Endpoint | Methods | Description |
 |----------|---------|-------------|
-| `/api/articles` | GET, POST | List/create articles |
-| `/api/articles/[id]` | GET, PATCH, DELETE | Single article operations |
-| `/api/teams` | GET, POST | List/create teams |
-| `/api/teams/[id]` | GET, PATCH, DELETE | Single team operations |
-| `/api/polls` | GET, POST | List/create poll weeks |
-| `/api/polls/[id]` | GET, PATCH, DELETE | Single poll operations |
-| `/api/polls/[id]/entries` | POST | Add poll entries |
-| `/api/transfers` | GET, POST | List/create transfers |
-| `/api/transfers/[id]` | GET, PATCH, DELETE | Single transfer operations |
+| `/api/articles` | GET, POST | List / create articles |
+| `/api/articles/[id]` | GET, PATCH, DELETE | Single article |
+| `/api/teams` | GET, POST | List / create teams |
+| `/api/teams/[id]` | GET, PATCH, DELETE | Single team |
+| `/api/polls` | GET, POST | Poll weeks |
+| `/api/polls/[id]` | GET, PATCH, DELETE | Single poll week |
+| `/api/polls/[id]/entries` | POST | Poll entries |
+| `/api/transfers` | GET, POST | Transfers |
+| `/api/transfers/[id]` | GET, PATCH, DELETE | Single transfer |
+| `/api/leagues/[code]/conferences` | GET | League conferences |
+| `/api/leagues/[code]/divisions` | GET | League divisions |
 
-## Database Schema
+Admin mutations also use **Server Actions** under `src/app/admin/*/actions.ts`.
 
-### Editorial Content
-- **Article** - News articles and blog posts
-- **Tag** - Article categorization
-- **PollWeek** - Weekly poll container
-- **PollEntry** - Individual team rankings
-- **Transfer** - Player transfer records
+## Database (Prisma)
 
-### MCLA Data (Future-Ready)
-- **Team** - Team database (manual + future MCLA API sync)
-- **Game** - Game results (future MCLA API sync)
+### Editorial
 
-## Future: MCLA API Integration
+- **Article**, **Tag** — news and analysis
+- **PollWeek**, **PollEntry** — weekly media poll rankings
+- **Transfer** — player movements between teams
 
-The architecture is designed to easily integrate with the MCLA API when available:
+### Reference data
 
-1. Teams and Games tables have `mclaTeamId` and `mclaGameId` fields
-2. `TeamService.syncFromMclaApi()` is stubbed and ready
-3. Data flows through your API, not directly from external sources
+- **Team**, **LeagueConfig** — teams and league/division metadata
+- **AdUnit** — ad placements (admin UI optional; rendering via code)
+- **Page** — CMS static content
+- **UploadedImage** — article/media uploads
+
+### Future MCLA sync
+
+- **Team** / **Game** include `mclaTeamId` / `mclaGameId` fields
+- `TeamService.syncFromMclaApi()` is stubbed for future API integration
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Production build |
+| `npm run start` | Start production server |
+| `npm run lint` | Run ESLint |
+| `npx prisma migrate dev` | Apply migrations (dev) |
+| `npx prisma studio` | Open Prisma Studio |
+
+## Dependency Security
+
+After `npm install`, run:
+
+```bash
+npm audit
+```
+
+Use **`npm audit fix`** for safe patches. **Do not use `npm audit fix --force`** — it can downgrade Next.js, Prisma, and next-auth to incompatible versions.
+
+Transitive dependency fixes are pinned in `package.json` under `overrides` (PostCSS, uuid, `@hono/node-server`). If new advisories appear, prefer updating direct dependencies or adding targeted overrides rather than forcing major downgrades.
 
 ## Deployment
 
-Deploy to Vercel:
+Build and deploy (e.g. Vercel):
+
 ```bash
 npm run build
 ```
 
-Or use the Vercel CLI:
-```bash
-vercel
-```
+Set `DATABASE_URL` in your hosting environment and run migrations against the production database before going live.
 
 ## License
 
 MIT
-
-```
-vcl-website/
-├── app/
-│   ├── (public)/              # Public pages
-│   │   ├── page.tsx           # Home
-│   │   ├── articles/
-│   │   ├── transfers/
-│   │   ├── polls/
-│   │   └── about/
-│   ├── admin/                 # Admin panel (protected)
-│   │   ├── layout.tsx
-│   │   ├── articles/
-│   │   ├── polls/
-│   │   ├── transfers/
-│   │   └── teams/
-│   └── api/                   # Your API layer
-│       ├── articles/
-│       ├── polls/
-│       ├── transfers/
-│       ├── teams/
-│       └── mcla/              # Future MCLA sync endpoints
-├── lib/
-│   ├── db/                    # Database client & queries
-│   ├── services/              # Business logic (TeamService, etc.)
-│   └── mcla/                  # Future MCLA API client
-├── components/
-│   ├── ui/                    # shadcn components
-│   └── ...
-└── supabase/
-    └── migrations/            # SQL migrations
-```
