@@ -2,6 +2,11 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { ArticleService } from "@/lib/services";
+import {
+  ArticleInlineAd,
+  ArticleSidebarMediumAd,
+  ArticleSidebarLargeAd,
+} from "@/components/ads";
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>;
@@ -11,6 +16,22 @@ function getReadTime(html: string): number {
   const text = html.replace(/<[^>]+>/g, " ");
   const words = text.trim().split(/\s+/).filter(Boolean).length;
   return Math.max(1, Math.round(words / 200));
+}
+
+/**
+ * Splits HTML at the Nth closing </p> tag so we can inject an ad
+ * above the fold break rather than at the very end of the article.
+ */
+function splitAtParagraph(html: string, afterParagraph: number): [string, string] {
+  let count = 0;
+  let idx = 0;
+  while (count < afterParagraph) {
+    const next = html.indexOf("</p>", idx);
+    if (next === -1) return [html, ""];
+    count++;
+    idx = next + 4;
+  }
+  return [html.slice(0, idx), html.slice(idx)];
 }
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
@@ -25,6 +46,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const relatedArticles = allRecent.filter((a) => a.id !== article.id).slice(0, 3);
   const readTime = getReadTime(article.content);
 
+  // Split content: first 2 paragraphs → inline ad → remainder
+  const [contentBefore, contentAfter] = splitAtParagraph(article.content, 2);
+
   return (
     <div className="flex flex-col">
       {/* ── Hero ── */}
@@ -37,7 +61,6 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             className="absolute inset-0 h-full w-full object-cover"
           />
         )}
-        {/* gradient: transparent top → dark bottom, matching design */}
         <div className="absolute inset-0" style={{background: "linear-gradient(180deg, #00000000 0%, #0A0A0Acc 55%, #0A0A0A 90%)"}} />
         <div className="absolute bottom-0 left-0 right-0 mx-auto max-w-[1440px] px-6 pb-10 md:px-12" style={{maxWidth: "1440px", left: "50%", transform: "translateX(-50%)", width: "100%"}}>
           <div className="flex items-center gap-2 mb-4">
@@ -61,9 +84,10 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       {/* ── Body + Sidebar ── */}
       <div className="mx-auto w-full max-w-[1440px] px-6 py-12 md:px-12 md:py-14">
         <div className="flex gap-12 items-start">
+
           {/* Article body */}
           <div className="flex-1 min-w-0">
-            {/* Metadata + share row — inside body per design */}
+            {/* Metadata + share row */}
             <div className="flex flex-col gap-4 pb-8 mb-8 border-b border-border">
               <div className="flex items-center justify-between flex-wrap gap-3">
                 <div className="flex items-center gap-3 text-[13px] flex-wrap">
@@ -93,23 +117,38 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               </div>
             </div>
 
-            <div
-              className="prose prose-invert prose-sm md:prose-base max-w-none
-                prose-headings:font-heading prose-headings:tracking-wide
-                prose-a:text-vcl-gold prose-a:no-underline hover:prose-a:underline
-                prose-strong:text-foreground
-                prose-blockquote:border-l-vcl-gold prose-blockquote:text-muted-foreground"
-              dangerouslySetInnerHTML={{ __html: article.content }}
-            />
+            {/* Content — first 2 paragraphs */}
+            {contentBefore && (
+              <div
+                className="prose prose-invert prose-sm md:prose-base max-w-none
+                  prose-headings:font-heading prose-headings:tracking-wide
+                  prose-a:text-vcl-gold prose-a:no-underline hover:prose-a:underline
+                  prose-strong:text-foreground
+                  prose-blockquote:border-l-vcl-gold prose-blockquote:text-muted-foreground"
+                dangerouslySetInnerHTML={{ __html: contentBefore }}
+              />
+            )}
 
-            {/* In-article ad */}
-            <div className="my-10 flex items-center justify-center rounded-sm border border-border bg-card h-[90px] w-full text-xs text-muted-foreground">
-              Advertisement · 728×90
+            {/* ── In-article leaderboard (above the fold break, after ~2 paragraphs) ── */}
+            <div className="my-8">
+              <ArticleInlineAd />
             </div>
+
+            {/* Content — remainder */}
+            {contentAfter && (
+              <div
+                className="prose prose-invert prose-sm md:prose-base max-w-none
+                  prose-headings:font-heading prose-headings:tracking-wide
+                  prose-a:text-vcl-gold prose-a:no-underline hover:prose-a:underline
+                  prose-strong:text-foreground
+                  prose-blockquote:border-l-vcl-gold prose-blockquote:text-muted-foreground"
+                dangerouslySetInnerHTML={{ __html: contentAfter }}
+              />
+            )}
 
             {/* Tags */}
             {article.tags.length > 0 && (
-              <div className="flex flex-wrap items-center gap-2 pt-6 border-t border-border">
+              <div className="flex flex-wrap items-center gap-2 pt-6 mt-6 border-t border-border">
                 <span className="text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">Tags:</span>
                 {article.tags.map((tag) => (
                   <Link
@@ -124,12 +163,10 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             )}
           </div>
 
-          {/* Sidebar */}
-          <aside className="hidden lg:flex flex-col gap-6 w-[300px] shrink-0">
-            <div className="rounded-sm border border-border bg-card flex flex-col items-center justify-center gap-1.5 h-[250px] text-muted-foreground">
-              <span className="text-[10px] tracking-widest uppercase">Advertisement</span>
-              <span className="text-lg font-semibold">300×250</span>
-            </div>
+          {/* ── Sidebar — sticky so ads follow the reader ── */}
+          <aside className="hidden lg:flex flex-col gap-6 w-[300px] shrink-0 sticky top-6 self-start">
+            {/* 300×250 medium rectangle */}
+            <ArticleSidebarMediumAd />
 
             {relatedArticles.length > 0 && (
               <div className="rounded-sm border border-border bg-card p-4">
@@ -138,7 +175,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 </h3>
                 <div className="flex flex-col">
                   {relatedArticles.map((rel) => (
-                    <Link key={rel.id} href={`/articles/${rel.slug}`} className="group flex flex-col gap-1.5 py-3 border-b border-border hover:opacity-80 transition-opacity">
+                    <Link key={rel.id} href={`/articles/${rel.slug}`} className="group flex flex-col gap-1.5 py-3 border-b border-border last:border-0 hover:opacity-80 transition-opacity">
                       {rel.league && (
                         <span className="text-[10px] font-bold tracking-[0.15em] text-vcl-gold uppercase">{rel.league}</span>
                       )}
@@ -156,14 +193,12 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               </div>
             )}
 
-            <div className="rounded-sm border border-border bg-card flex flex-col items-center justify-center gap-1.5 h-[280px] text-muted-foreground">
-              <span className="text-[10px] tracking-widest uppercase">Advertisement</span>
-              <span className="text-lg font-semibold">300×600</span>
-              <span className="text-[10px] tracking-widest uppercase">Half Page</span>
-            </div>
+            {/* 300×600 half-page */}
+            <ArticleSidebarLargeAd />
           </aside>
         </div>
       </div>
+
       {/* ── Bottom back bar ── */}
       <div className="border-t border-border bg-secondary">
         <div className="mx-auto max-w-[1440px] px-6 py-5 md:px-12">

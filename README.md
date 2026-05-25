@@ -264,3 +264,21 @@ pm2 restart vcl --update-env
 ## License
 
 MIT
+
+
+## Domain Name Options
+
+| Domain                               | Price |
+|--------------------------------------|-------|
+| varsityclublacrosse.net              | $12   |
+| varsityclublacrosse.org              | $9    |
+| varsity-club-lacrosse.com            | $11   |
+| vclacrosse.com                       | $11   |
+| varsityclublax.com                   | $11   |
+| vclnetwork.com                       | $11   |
+| varsityclublacrossenetwork.com       | $11   |
+| varsityclublacrosseinsider.com       | $11   |
+| varsityclublacrossenews.com          | $11   |
+| vclnews.com                          | $11   |
+| varsityclublacrosse.news             | $25   |
+| vcl.news                             | $25   |

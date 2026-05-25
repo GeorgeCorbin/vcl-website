@@ -5,6 +5,7 @@ import type { ArticleWithRelations } from "@/lib/services/article-service";
 import { getActiveLeagues } from "@/lib/league-config";
 import { ArticlesFilterBar } from "./articles-filter-bar";
 import { ArticlesPagination, PAGE_SIZE } from "./articles-pagination";
+import { ArticlesIndexMediumAd, ArticlesIndexLargeAd } from "@/components/ads";
 
 type SearchParams = Promise<{ league?: string; tag?: string; q?: string; page?: string }>;
 
@@ -128,12 +129,9 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Sea
             />
           </div>
 
-          {/* Sidebar */}
-          <aside className="hidden xl:flex flex-col gap-6 w-[280px] shrink-0">
-            {/* Ad unit */}
-            <div className="rounded-sm border border-border bg-card flex items-center justify-center h-[250px] text-xs text-muted-foreground">
-              Advertisement · 300×250
-            </div>
+          {/* Sidebar — sticky so ads follow the reader */}
+          <aside className="hidden xl:flex flex-col gap-6 w-[280px] shrink-0 sticky top-6 self-start">
+            <ArticlesIndexMediumAd />
 
             {/* Popular topics */}
             <div className="rounded-sm border border-border bg-card p-5">
@@ -149,10 +147,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Sea
               </div>
             </div>
 
-            {/* Second ad */}
-            <div className="rounded-sm border border-border bg-card flex items-center justify-center h-[600px] text-xs text-muted-foreground">
-              Advertisement · 300×600
-            </div>
+            <ArticlesIndexLargeAd />
           </aside>
         </div>
       </div>

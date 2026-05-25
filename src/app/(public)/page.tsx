@@ -4,6 +4,7 @@ import { FEATURES } from "@/lib/feature-flags";
 import { ArticleService } from "@/lib/services";
 import type { ArticleWithRelations } from "@/lib/services/article-service";
 import { HeroCarousel } from "@/components/hero-carousel";
+import { HomeLeaderboardAd, HomeBillboardAd } from "@/components/ads";
 
 export default async function HomePage() {
   const recentArticles = await ArticleService.list({ status: "PUBLISHED", limit: 3 }).catch(() => []);
@@ -64,8 +65,8 @@ export default async function HomePage() {
           <span className="text-[11px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">
             Covering MCLA · SMLL · NCLL · WCLL and More
           </span>
-          <div className="hidden lg:flex items-center justify-center h-10 px-4 rounded-sm border border-border text-[11px] text-muted-foreground min-w-[200px]">
-            Advertisement
+          <div className="hidden lg:flex items-center justify-center min-w-[300px] max-w-[728px] w-full">
+            <HomeLeaderboardAd className="h-10" />
           </div>
         </div>
       </section>
@@ -170,12 +171,10 @@ export default async function HomePage() {
         );
       })()}
 
-      {/* ── Mid-page ad ── */}
+      {/* ── Mid-page billboard ad ── */}
       <div className="border-y border-border bg-secondary">
         <div className="mx-auto max-w-[1440px] px-6 py-5 md:px-12 flex items-center justify-center">
-          <div className="flex items-center justify-center rounded-sm border border-border bg-card h-16 w-full max-w-[970px] text-xs text-muted-foreground">
-            Advertisement
-          </div>
+          <HomeBillboardAd className="h-[90px]" />
         </div>
       </div>
 
