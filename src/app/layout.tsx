@@ -5,6 +5,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { FEATURES } from "@/lib/feature-flags";
 import { BottomAdBanner } from "@/components/ads";
+import { AdSenseScript } from "@/components/ads/adsense-script";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -54,17 +55,9 @@ export default function RootLayout({
           `}
         </Script>
 
-        {/* Google AdSense — only loads when the publisher ID is configured */}
-        {process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID && (
-          <Script
-            async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID}`}
-            crossOrigin="anonymous"
-            strategy="afterInteractive"
-          />
-        )}
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} ${anton.variable} antialiased`}>
+        {process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID && <AdSenseScript />}
         {children}
         <Toaster />
         {FEATURES.ADS_PUBLIC && <BottomAdBanner />}

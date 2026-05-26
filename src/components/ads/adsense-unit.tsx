@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { FEATURES } from "@/lib/feature-flags";
+import { ADSENSE_LOADED_EVENT } from "./adsense-script";
 
 const CLIENT_ID = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
 
@@ -18,6 +19,8 @@ interface AdSenseUnitProps {
   /** AdSense ad unit slot ID (e.g. "1234567890") */
   slot: string | undefined;
   format?: "auto" | "rectangle" | "vertical" | "horizontal" | "fluid";
+  /** e.g. "in-article" for native in-article units (requires format "fluid") */
+  layout?: "in-article";
   responsive?: boolean;
   style?: React.CSSProperties;
   className?: string;
@@ -40,22 +43,45 @@ interface AdSenseUnitProps {
 export function AdSenseUnit({
   slot,
   format = "auto",
+  layout,
   responsive = true,
   style,
   className,
   placeholderLabel,
 }: AdSenseUnitProps) {
+  const insRef = useRef<HTMLModElement>(null);
   const pushed = useRef(false);
 
   useEffect(() => {
     if (!CLIENT_ID || !slot || pushed.current) return;
-    pushed.current = true;
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
-    } catch {
-      // safe to ignore — script may not be loaded yet or ad is already filled
+
+    const requestAd = () => {
+      if (pushed.current || !insRef.current) return;
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
+        pushed.current = true;
+      } catch {
+        // Script not ready yet — event listener or interval will retry
+      }
+    };
+
+    // Script already on the page (e.g. navigated client-side)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((window as any).adsbygoogle?.loaded) {
+      requestAd();
+      return;
     }
+
+    window.addEventListener(ADSENSE_LOADED_EVENT, requestAd);
+    const interval = window.setInterval(requestAd, 300);
+    const timeout = window.setTimeout(() => window.clearInterval(interval), 15_000);
+
+    return () => {
+      window.removeEventListener(ADSENSE_LOADED_EVENT, requestAd);
+      window.clearInterval(interval);
+      window.clearTimeout(timeout);
+    };
   }, [slot]);
 
   // Single kill-switch for all public ad rendering
@@ -82,12 +108,14 @@ export function AdSenseUnit({
 
   return (
     <ins
+      ref={insRef}
       className={cn("adsbygoogle", className)}
-      style={{ display: "block", ...style }}
+      style={{ display: "block", textAlign: layout === "in-article" ? "center" : undefined, ...style }}
       data-ad-client={CLIENT_ID}
       data-ad-slot={slot}
       data-ad-format={format}
-      data-full-width-responsive={responsive ? "true" : undefined}
+      data-ad-layout={layout}
+      data-full-width-responsive={layout ? undefined : responsive ? "true" : undefined}
       data-adtest={TEST_MODE ? "on" : undefined}
     />
   );

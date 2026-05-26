@@ -10,14 +10,15 @@ import { AdSenseUnit } from "./adsense-unit";
 // update adsense-unit.tsx and keep these components unchanged.
 // ---------------------------------------------------------------------------
 
-/** 728×90 leaderboard injected after the 2nd paragraph of an article */
+/** In-article native ad (fluid) — placed after ~2nd paragraph, not for sidebar use */
 export function ArticleInlineAd({ className }: { className?: string }) {
   return (
     <AdSenseUnit
       slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_ARTICLE_INLINE}
-      format="horizontal"
-      placeholderLabel="Article · 728×90 Leaderboard"
-      style={{ minHeight: 90 }}
+      format="fluid"
+      layout="in-article"
+      responsive={false}
+      placeholderLabel="Article · In-article"
       className={cn("w-full", className)}
     />
   );
