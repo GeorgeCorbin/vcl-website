@@ -14,7 +14,7 @@ interface PageProps {
 
 export default async function EditArticlePage({ params }: PageProps) {
   const { id } = await params;
-  const [article, uploadedImages, leagues] = await Promise.all([
+  const [article, leagues] = await Promise.all([
     prisma.article.findUnique({
       where: { id },
       select: {
@@ -35,10 +35,6 @@ export default async function EditArticlePage({ params }: PageProps) {
         tags: { select: { id: true, name: true, slug: true } },
       },
     }),
-    prisma.uploadedImage.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 20,
-    }),
     getActiveLeagues(),
   ]);
 
@@ -48,7 +44,6 @@ export default async function EditArticlePage({ params }: PageProps) {
     <ArticleEditor
       mode="edit"
       article={article}
-      initialImages={uploadedImages.map((img) => img.url)}
       leagues={leagues}
       formAction={updateArticle}
       deleteSlot={<DeleteArticleButton key="delete" id={id} />}

@@ -83,43 +83,15 @@ export default function AboutPage() {
           <section>
             <h2 className="font-heading text-3xl tracking-wide text-foreground mb-5">CONTACT US</h2>
             <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-              Have a tip, story idea, or want to get involved? Reach out to us on social media.
+              Have a tip, story idea, or want to get involved? Visit our contact page to send a
+              message or connect on social media.
             </p>
-            <div className="flex flex-col gap-3">
-              <div className="rounded-sm border border-border bg-card p-4 flex items-center justify-between">
-                <span className="text-sm font-semibold text-foreground">Instagram</span>
-                <a
-                  href="https://www.instagram.com/varsityclublacrosse/"
-                  className="text-sm text-vcl-gold hover:underline"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  @varsityclublacrosse
-                </a>
-              </div>
-              <div className="rounded-sm border border-border bg-card p-4 flex items-center justify-between">
-                <span className="text-sm font-semibold text-foreground">X / Twitter</span>
-                <a
-                  href="https://x.com/VarsityLacrosse"
-                  className="text-sm text-vcl-gold hover:underline"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  @VarsityLacrosse
-                </a>
-              </div>
-              <div className="rounded-sm border border-border bg-card p-4 flex items-center justify-between">
-                <span className="text-sm font-semibold text-foreground">YouTube</span>
-                <a
-                  href="https://www.youtube.com/channel/UCCaeRbVrXas2w-Fiu4ZnwTA"
-                  className="text-sm text-vcl-gold hover:underline"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Varsity Club Lacrosse
-                </a>
-              </div>
-            </div>
+            <Link
+              href="/contact"
+              className="inline-flex h-10 items-center rounded-sm bg-vcl-gold px-5 text-sm font-semibold text-vcl-gold-foreground hover:bg-vcl-gold/90 transition-colors"
+            >
+              Get in touch
+            </Link>
           </section>
         </div>
       </div>

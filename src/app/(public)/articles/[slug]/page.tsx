@@ -19,6 +19,54 @@ function getReadTime(html: string): number {
 }
 
 /**
+ * Wraps <img data-credit="..."> in a <figure> so photographer credits
+ * appear below images in the published article. The figure inherits the
+ * image's custom width (if any) so the caption sits directly under the
+ * image rather than spanning the full column.
+ */
+function injectImageCredits(html: string): string {
+  return html.replace(
+    /<img([^>]*?)>/gi,
+    (fullMatch, attrs) => {
+      const creditMatch = attrs.match(/data-credit="([^"]*)"/);
+      if (!creditMatch || !creditMatch[1].trim()) return fullMatch;
+
+      const credit = creditMatch[1].trim();
+
+      // Extract inline width (e.g. "50%") so the figure matches the image size
+      const styleMatch = attrs.match(/style="([^"]*)"/);
+      const styleValue = styleMatch?.[1] ?? "";
+      const widthMatch = styleValue.match(/width:\s*(\d+%)/);
+      const imageWidth = widthMatch?.[1];
+
+      const figStyle = [
+        imageWidth ? `width: ${imageWidth}` : "",
+        "display: block",
+        "margin: 0 auto",
+      ].filter(Boolean).join("; ");
+
+      // Strip width/centering from the img — the figure controls sizing now,
+      // and the w-full class on the img will make it fill 100% of the figure.
+      const cleanedStyle = styleValue
+        .replace(/width:\s*[^;]+;?\s*/g, "")
+        .replace(/height:\s*auto;?\s*/g, "")
+        .replace(/display:\s*[^;]+;?\s*/g, "")
+        .replace(/margin[^:]*:\s*[^;]+;?\s*/g, "")
+        .replace(/;+$/, "")
+        .trim();
+
+      const cleanedAttrs = styleMatch
+        ? cleanedStyle
+          ? attrs.replace(/style="[^"]*"/, `style="${cleanedStyle}"`)
+          : attrs.replace(/\s*style="[^"]*"/, "")
+        : attrs;
+
+      return `<figure style="${figStyle}"><img${cleanedAttrs}><figcaption>Photo by ${credit}</figcaption></figure>`;
+    }
+  );
+}
+
+/**
  * Splits HTML at the Nth closing </p> tag so we can inject an ad
  * above the fold break rather than at the very end of the article.
  */
@@ -46,8 +94,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const relatedArticles = allRecent.filter((a) => a.id !== article.id).slice(0, 3);
   const readTime = getReadTime(article.content);
 
-  // Split content: first 2 paragraphs → inline ad → remainder
-  const [contentBefore, contentAfter] = splitAtParagraph(article.content, 2);
+  // Inject photo credit captions, then split: first 2 paragraphs → inline ad → remainder
+  const processedContent = injectImageCredits(article.content);
+  const [contentBefore, contentAfter] = splitAtParagraph(processedContent, 2);
 
   return (
     <div className="flex flex-col">
@@ -136,7 +185,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   prose-headings:font-heading prose-headings:tracking-wide
                   prose-a:text-vcl-gold prose-a:no-underline hover:prose-a:underline
                   prose-strong:text-foreground
-                  prose-blockquote:border-l-vcl-gold prose-blockquote:text-muted-foreground"
+                  prose-blockquote:border-l-vcl-gold prose-blockquote:text-muted-foreground
+                  prose-figcaption:text-xs prose-figcaption:italic prose-figcaption:text-muted-foreground/70 prose-figcaption:mt-1 prose-figcaption:text-center"
                 dangerouslySetInnerHTML={{ __html: contentBefore }}
               />
             )}
@@ -153,7 +203,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   prose-headings:font-heading prose-headings:tracking-wide
                   prose-a:text-vcl-gold prose-a:no-underline hover:prose-a:underline
                   prose-strong:text-foreground
-                  prose-blockquote:border-l-vcl-gold prose-blockquote:text-muted-foreground"
+                  prose-blockquote:border-l-vcl-gold prose-blockquote:text-muted-foreground
+                  prose-figcaption:text-xs prose-figcaption:italic prose-figcaption:text-muted-foreground/70 prose-figcaption:mt-1 prose-figcaption:text-center"
                 dangerouslySetInnerHTML={{ __html: contentAfter }}
               />
             )}

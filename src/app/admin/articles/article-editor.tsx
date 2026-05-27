@@ -35,7 +35,6 @@ type ArticleEditorProps = {
     publishedAt?: Date | null;
     tags?: { id: string; name: string; slug: string }[];
   };
-  initialImages: string[];
   leagues: { id: string; name: string; code: string }[];
   formAction: (formData: FormData) => Promise<void>;
   deleteSlot?: React.ReactNode;
@@ -75,7 +74,7 @@ function nowLocalString(): string {
   return toLocalDatetimeString(new Date());
 }
 
-export function ArticleEditor({ mode, article, initialImages, leagues, formAction, deleteSlot }: ArticleEditorProps) {
+export function ArticleEditor({ mode, article, leagues, formAction, deleteSlot }: ArticleEditorProps) {
   const [title, setTitle] = useState(article?.title ?? "");
   const [slug, setSlug] = useState(article?.slug ?? "");
   const [excerpt, setExcerpt] = useState(article?.excerpt ?? "");
@@ -96,11 +95,9 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
       : ""
   );
   const [showPreview, setShowPreview] = useState(false);
-  const [images, setImages] = useState(initialImages);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverError, setCoverError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>(
     article?.tags?.map((t) => t.name) ?? []
@@ -159,10 +156,6 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
     setTags((prev) => prev.filter((t) => t !== tag));
   };
 
-  const insertImageIntoEditor = (src: string) => {
-    editorRef.current?.insertImage(src);
-  };
-
   const handleTitleChange = (value: string) => {
     setTitle(value);
     if (!article?.slug && slug.trim().length === 0) {
@@ -174,33 +167,6 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
     }
   };
 
-
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    if (file.size > MAX_FILE_SIZE_BYTES) {
-      setUploadError(`Images must be ${formatMegabytes(MAX_FILE_SIZE_BYTES)} or smaller.`);
-      event.target.value = "";
-      return;
-    }
-    setIsUploading(true);
-    setUploadError(null);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const result = await uploadImageAction(formData);
-      if (result.error) {
-        setUploadError(result.error);
-      } else if (result.path) {
-        setImages((prev) => [result.path!, ...prev]);
-      }
-    } catch (error) {
-      setUploadError(getSaveErrorMessage(error));
-    } finally {
-      setIsUploading(false);
-      if (event.target) event.target.value = "";
-    }
-  };
 
   const handleCoverChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -275,7 +241,6 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
 
         formData.delete("coverImageFile");
         formData.delete("coverImage");
-        formData.delete("images");
         formData.set("title", title);
         formData.set("slug", slug);
         formData.set("excerpt", excerpt);
@@ -382,7 +347,31 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
 
           <div className="space-y-2">
             <Label>Content</Label>
-            <TiptapEditor ref={editorRef} value={content} onChange={(val) => { setContent(val); setIsDirty(true); }} />
+            <TiptapEditor
+              ref={editorRef}
+              value={content}
+              onChange={(val) => { setContent(val); setIsDirty(true); }}
+              onImageUpload={async (file) => {
+                if (file.size > MAX_FILE_SIZE_BYTES) {
+                  setUploadError(`Images must be ${formatMegabytes(MAX_FILE_SIZE_BYTES)} or smaller.`);
+                  return null;
+                }
+                setUploadError(null);
+                try {
+                  const formData = new FormData();
+                  formData.append("file", file);
+                  const result = await uploadImageAction(formData);
+                  if (result.error) {
+                    setUploadError(result.error);
+                    return null;
+                  }
+                  return result.path ?? null;
+                } catch (error) {
+                  setUploadError(getSaveErrorMessage(error));
+                  return null;
+                }
+              }}
+            />
           </div>
         </section>
 
@@ -565,42 +554,6 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
                 <input type="file" name="coverImageFile" accept="image/*" className="hidden" onChange={handleCoverChange} />
               </label>
               {validationErrors.cover && <p className="text-sm text-red-400">{validationErrors.cover}</p>}
-            </div>
-          )}
-        </section>
-
-        <section className="rounded-sm border border-border bg-card p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">Content Images</h3>
-              <p className="text-sm text-muted-foreground mt-1">Upload assets to embed in the article body.</p>
-            </div>
-            <label className={`inline-flex cursor-pointer items-center gap-1.5 rounded-sm border border-border px-3 py-1.5 text-xs font-semibold transition-colors ${
-              isUploading ? "text-muted-foreground opacity-50 cursor-not-allowed" : "text-muted-foreground hover:border-vcl-gold/40 hover:text-vcl-gold"
-            }`}>
-              {isUploading ? "Uploading..." : "Upload Image"}
-              <input type="file" name="images" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={isUploading} />
-            </label>
-          </div>
-          {uploadError && <p className="text-sm text-red-400">{uploadError}</p>}
-          {images.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No uploads yet.</p>
-          ) : (
-            <div className="grid gap-3 md:grid-cols-3">
-              {images.map((image) => (
-                <button
-                  key={image}
-                  type="button"
-                  onClick={() => insertImageIntoEditor(image)}
-                  title="Click to insert into article body"
-                  className="group relative aspect-video overflow-hidden rounded-sm border border-border hover:border-vcl-gold/40 transition-colors"
-                >
-                  <Image src={image} alt="" fill sizes="200px" className="object-cover" unoptimized={isUploadedImage(image)} />
-                  <span className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-bold tracking-widest uppercase text-vcl-gold">
-                    Insert
-                  </span>
-                </button>
-              ))}
             </div>
           )}
         </section>

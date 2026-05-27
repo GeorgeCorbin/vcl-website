@@ -15,6 +15,7 @@ const allNavItems = [
   { href: "/polls", label: "Rankings", feature: "MEDIA_POLLS" as const },
   { href: "/transfers", label: "Transfers", feature: "TRANSFERS" as const },
   { href: "/about", label: "About", feature: null },
+  { href: "/contact", label: "Contact", feature: null },
 ];
 
 const navItems = allNavItems.filter(
