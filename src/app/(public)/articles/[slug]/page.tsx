@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Script from "next/script";
 import { ArrowLeft } from "lucide-react";
 import { ArticleService } from "@/lib/services";
 import {
@@ -67,6 +68,45 @@ function injectImageCredits(html: string): string {
 }
 
 /**
+ * Replaces <div data-social-embed="true" ...> markers with platform embed HTML.
+ * Twitter/X and Instagram embeds are rendered as blockquotes that the
+ * respective platform scripts transform into full post cards.
+ */
+function processSocialEmbeds(html: string): string {
+  return html.replace(
+    /<div[^>]+data-social-embed="true"[^>]*>(<\/div>)?/gi,
+    (match) => {
+      const urlMatch = match.match(/data-embed-url="([^"]*)"/);
+      const typeMatch = match.match(/data-embed-type="([^"]*)"/);
+      const url = urlMatch?.[1];
+      const type = typeMatch?.[1];
+      if (!url) return "";
+      if (type === "twitter") {
+        return [
+          `<div style="display:flex;justify-content:center;margin:1.75rem 0">`,
+          `<blockquote class="twitter-tweet" data-dnt="true">`,
+          `<a href="${url}"></a>`,
+          `</blockquote>`,
+          `</div>`,
+        ].join("");
+      }
+      if (type === "instagram") {
+        return [
+          `<div style="display:flex;justify-content:center;margin:1.75rem 0">`,
+          `<blockquote class="instagram-media" data-instgrm-captioned`,
+          ` data-instgrm-permalink="${url}" data-instgrm-version="14"`,
+          ` style="background:#FFF;border:0;border-radius:3px;box-shadow:0 0 1px 0 rgba(0,0,0,.5),0 1px 10px 0 rgba(0,0,0,.15);margin:1px;max-width:540px;min-width:326px;padding:0;width:calc(100% - 2px)">`,
+          `<a href="${url}">View this post on Instagram</a>`,
+          `</blockquote>`,
+          `</div>`,
+        ].join("");
+      }
+      return "";
+    }
+  );
+}
+
+/**
  * Splits HTML at the Nth closing </p> tag so we can inject an ad
  * above the fold break rather than at the very end of the article.
  */
@@ -94,8 +134,12 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const relatedArticles = allRecent.filter((a) => a.id !== article.id).slice(0, 3);
   const readTime = getReadTime(article.content);
 
-  // Inject photo credit captions, then split: first 2 paragraphs → inline ad → remainder
-  const processedContent = injectImageCredits(article.content);
+  // Detect which social embed scripts are needed before transforming the HTML
+  const hasTwitterEmbeds = article.content.includes('data-embed-type="twitter"');
+  const hasInstagramEmbeds = article.content.includes('data-embed-type="instagram"');
+
+  // Inject photo credits → expand social embeds → split for inline ad
+  const processedContent = processSocialEmbeds(injectImageCredits(article.content));
   const [contentBefore, contentAfter] = splitAtParagraph(processedContent, 2);
 
   return (
@@ -274,6 +318,20 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           </Link>
         </div>
       </div>
+
+      {/* ── Social embed scripts — only loaded when the article contains them ── */}
+      {hasTwitterEmbeds && (
+        <Script
+          src="https://platform.twitter.com/widgets.js"
+          strategy="afterInteractive"
+        />
+      )}
+      {hasInstagramEmbeds && (
+        <Script
+          src="https://www.instagram.com/embed.js"
+          strategy="afterInteractive"
+        />
+      )}
     </div>
   );
 }
