@@ -7,9 +7,20 @@ import { HeroCarousel } from "@/components/hero-carousel";
 import { HomeLeaderboardAd, HomeBillboardAd } from "@/components/ads";
 
 export default async function HomePage() {
-  const recentArticles = await ArticleService.list({ status: "PUBLISHED", limit: 3 }).catch(() => []);
+  const [recentArticles, heroArticles, featuredResults] = await Promise.all([
+    ArticleService.list({ status: "PUBLISHED", limit: 3 }).catch(() => []),
+    ArticleService.list({ status: "PUBLISHED", limit: 10 }).catch(() => []),
+    // Dedicated query so the featured spotlight isn't limited to the 3 most recent
+    ArticleService.list({ status: "PUBLISHED", featured: true, limit: 1 }).catch(() => []),
+  ]);
 
-  const heroArticles = await ArticleService.list({ status: "PUBLISHED", limit: 10 }).catch(() => []);
+  // Most recently published article with featured:true; fall back to the latest article
+  const spotlightArticle: ArticleWithRelations | null =
+    (featuredResults[0] as ArticleWithRelations | undefined) ??
+    (recentArticles[0] as ArticleWithRelations | undefined) ??
+    null;
+  // Only show the "Featured" badge when the article is actually marked featured
+  const spotlightIsFeatured = !!featuredResults[0];
   const heroSlides = heroArticles
     .filter((a: ArticleWithRelations) => !!a.coverImage)
     .slice(0, 5)
@@ -18,6 +29,8 @@ export default async function HomePage() {
       title: a.title,
       league: a.league ?? null,
       slug: a.slug,
+      focalX: (a as typeof a & { coverFocalX?: number | null }).coverFocalX ?? 50,
+      focalY: (a as typeof a & { coverFocalY?: number | null }).coverFocalY ?? 50,
     }));
 
   return (
@@ -101,7 +114,12 @@ export default async function HomePage() {
                 <div className="h-48 bg-accent overflow-hidden">
                   {article.coverImage && (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={article.coverImage} alt={article.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    <img
+                      src={article.coverImage}
+                      alt={article.title}
+                      className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      style={{ objectPosition: `${(article as typeof article & { coverFocalX?: number | null }).coverFocalX ?? 50}% ${(article as typeof article & { coverFocalY?: number | null }).coverFocalY ?? 50}%` }}
+                    />
                   )}
                 </div>
                 <div className="p-5 flex flex-col gap-2.5">
@@ -133,43 +151,47 @@ export default async function HomePage() {
       </section>
 
       {/* ── Featured Spotlight ── */}
-      {recentArticles.length > 0 && (() => {
-        const featured = recentArticles.find((a: ArticleWithRelations) => a.featured) ?? recentArticles[0];
-        return (
-          <section className="border-y border-border bg-secondary">
-            <div className="mx-auto max-w-[1440px] flex flex-col md:flex-row h-auto md:h-[460px] overflow-hidden">
-              {/* Text col */}
-              <div className="flex flex-col justify-center gap-5 px-6 py-10 md:px-14 md:w-[520px] shrink-0">
-                <div className="flex items-center gap-2">
+      {spotlightArticle && (
+        <section className="border-y border-border bg-secondary">
+          <div className="mx-auto max-w-[1440px] flex flex-col md:flex-row h-auto md:h-[460px] overflow-hidden">
+            {/* Text col */}
+            <div className="flex flex-col justify-center gap-5 px-6 py-10 md:px-14 md:w-[520px] shrink-0">
+              <div className="flex items-center gap-2">
+                {spotlightIsFeatured && (
                   <span className="rounded-sm bg-vcl-gold px-2 py-0.5 text-[9px] font-bold tracking-widest text-vcl-gold-foreground uppercase">Featured</span>
-                  {featured.league && (
-                    <span className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">{featured.league}</span>
-                  )}
-                </div>
-                <h2 className="font-heading text-3xl lg:text-4xl leading-[0.95] tracking-wide text-foreground">{featured.title}</h2>
-                {featured.excerpt && (
-                  <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">{featured.excerpt}</p>
                 )}
-                <Link
-                  href={`/articles/${featured.slug}`}
-                  className="self-start inline-flex items-center gap-2 rounded-sm bg-vcl-gold px-5 py-2.5 text-sm font-bold text-vcl-gold-foreground hover:bg-vcl-gold/90 transition-colors"
-                >
-                  Read Story <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
-              </div>
-              {/* Image col */}
-              <div className="flex-1 min-h-[240px] bg-accent overflow-hidden">
-                {featured.coverImage ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={featured.coverImage} alt={featured.title} className="h-full w-full object-cover" />
-                ) : (
-                  <div className="h-full w-full bg-accent" />
+                {spotlightArticle.league && (
+                  <span className="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">{spotlightArticle.league}</span>
                 )}
               </div>
+              <h2 className="font-heading text-3xl lg:text-4xl leading-[0.95] tracking-wide text-foreground">{spotlightArticle.title}</h2>
+              {spotlightArticle.excerpt && (
+                <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">{spotlightArticle.excerpt}</p>
+              )}
+              <Link
+                href={`/articles/${spotlightArticle.slug}`}
+                className="self-start inline-flex items-center gap-2 rounded-sm bg-vcl-gold px-5 py-2.5 text-sm font-bold text-vcl-gold-foreground hover:bg-vcl-gold/90 transition-colors"
+              >
+                Read Story <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
             </div>
-          </section>
-        );
-      })()}
+            {/* Image col */}
+            <div className="flex-1 min-h-[240px] bg-accent overflow-hidden">
+              {spotlightArticle.coverImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={spotlightArticle.coverImage}
+                  alt={spotlightArticle.title}
+                  className="h-full w-full object-cover"
+                  style={{ objectPosition: `${(spotlightArticle as typeof spotlightArticle & { coverFocalX?: number | null }).coverFocalX ?? 50}% ${(spotlightArticle as typeof spotlightArticle & { coverFocalY?: number | null }).coverFocalY ?? 50}%` }}
+                />
+              ) : (
+                <div className="h-full w-full bg-accent" />
+              )}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── Mid-page billboard ad ── */}
       <div className="border-y border-border bg-secondary">

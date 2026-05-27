@@ -24,6 +24,9 @@ export default async function EditArticlePage({ params }: PageProps) {
         excerpt: true,
         content: true,
         coverImage: true,
+        coverFocalX: true,
+        coverFocalY: true,
+        photographerCredit: true,
         status: true,
         featured: true,
         author: true,
@@ -48,7 +51,7 @@ export default async function EditArticlePage({ params }: PageProps) {
       initialImages={uploadedImages.map((img) => img.url)}
       leagues={leagues}
       formAction={updateArticle}
-      deleteSlot={<DeleteArticleButton id={id} />}
+      deleteSlot={<DeleteArticleButton key="delete" id={id} />}
     />
   );
 }

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -17,16 +16,16 @@ import {
   ArrowLeftRight,
   Megaphone,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useEffect, useState } from "react";
 import { FEATURES } from "@/lib/feature-flags";
 import { VclLogo } from "@/components/layout/vcl-logo";
+import { NavGuardProvider, useNavGuard } from "@/lib/nav-guard";
 
 const allNavItems = [
   { href: "/admin", label: "Dashboard", icon: Home, feature: null },
   { href: "/admin/articles", label: "Articles", icon: FileText, feature: null },
-  { href: "/admin/teams", label: "Teams", icon: Users, feature: null },
+  { href: "/admin/teams", label: "Teams", icon: Users, feature: "MEDIA_POLLS" as const },
   { href: "/admin/polls", label: "Media Polls", icon: BarChart3, feature: "MEDIA_POLLS" as const },
   { href: "/admin/transfers", label: "Transfers", icon: ArrowLeftRight, feature: "TRANSFERS" as const },
   { href: "/admin/leagues", label: "Leagues", icon: Trophy, feature: null },
@@ -41,6 +40,7 @@ const navItems = allNavItems.filter(
 
 function Sidebar({ className, onClose }: { className?: string; onClose?: () => void }) {
   const pathname = usePathname();
+  const { guardNavigate } = useNavGuard();
 
   return (
     <div className={cn("flex flex-col h-full bg-secondary border-r border-border", className)}>
@@ -58,12 +58,11 @@ function Sidebar({ className, onClose }: { className?: string; onClose?: () => v
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (
-            <Link
+            <button
               key={item.href}
-              href={item.href}
-              onClick={onClose}
+              onClick={() => guardNavigate(item.href, onClose)}
               className={cn(
-                "flex items-center gap-3 rounded-sm px-3 py-2.5 text-[13px] font-medium transition-colors",
+                "flex items-center gap-3 rounded-sm px-3 py-2.5 text-[13px] font-medium transition-colors w-full text-left",
                 isActive
                   ? "bg-vcl-gold text-vcl-gold-foreground"
                   : "text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -71,20 +70,20 @@ function Sidebar({ className, onClose }: { className?: string; onClose?: () => v
             >
               <item.icon className="h-4 w-4 shrink-0" />
               {item.label}
-            </Link>
+            </button>
           );
         })}
       </nav>
 
       {/* Footer */}
       <div className="border-t border-border p-3 flex flex-col gap-0.5 shrink-0">
-        <Link
-          href="/"
-          className="flex items-center gap-3 rounded-sm px-3 py-2.5 text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+        <button
+          onClick={() => guardNavigate("/", onClose)}
+          className="flex items-center gap-3 rounded-sm px-3 py-2.5 text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground transition-colors w-full text-left"
         >
           <ExternalLink className="h-4 w-4 shrink-0" />
           Back to Site
-        </Link>
+        </button>
         <button
           onClick={() => {
             document.cookie = "vcl_admin_session=; path=/; max-age=0";
@@ -100,11 +99,7 @@ function Sidebar({ className, onClose }: { className?: string; onClose?: () => v
   );
 }
 
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
@@ -157,5 +152,13 @@ export default function AdminLayout({
         <div className="p-6 md:p-8">{children}</div>
       </main>
     </div>
+  );
+}
+
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <NavGuardProvider>
+      <AdminLayoutInner>{children}</AdminLayoutInner>
+    </NavGuardProvider>
   );
 }

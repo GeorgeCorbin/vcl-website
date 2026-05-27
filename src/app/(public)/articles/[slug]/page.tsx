@@ -59,6 +59,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             src={article.coverImage}
             alt={article.title}
             className="absolute inset-0 h-full w-full object-cover"
+            style={{
+              objectPosition: `${(article as typeof article & { coverFocalX?: number | null }).coverFocalX ?? 50}% ${(article as typeof article & { coverFocalY?: number | null }).coverFocalY ?? 50}%`,
+            }}
           />
         )}
         <div className="absolute inset-0" style={{background: "linear-gradient(180deg, #00000000 0%, #0A0A0Acc 55%, #0A0A0A 90%)"}} />
@@ -80,6 +83,15 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           </h1>
         </div>
       </div>
+
+      {/* ── Photographer credit ── */}
+      {(article as typeof article & { photographerCredit?: string | null }).photographerCredit && (
+        <div className="mx-auto w-full max-w-[1440px] px-6 pt-2 md:px-12">
+          <p className="text-[11px] text-muted-foreground/60 italic">
+            Photo by {(article as typeof article & { photographerCredit?: string | null }).photographerCredit}
+          </p>
+        </div>
+      )}
 
       {/* ── Body + Sidebar ── */}
       <div className="mx-auto w-full max-w-[1440px] px-6 py-12 md:px-12 md:py-14">

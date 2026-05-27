@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { format } from "date-fns";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil } from "lucide-react";
 import prisma from "@/lib/db";
 import { ArticleStatus } from "@prisma/client";
-import { deleteArticle } from "./actions";
 import { getActiveLeagues } from "@/lib/league-config";
+import { DeleteArticleButton } from "./delete-article-button";
 
 type PageProps = {
   searchParams: Promise<{ status?: string; league?: string }>;
@@ -110,7 +110,7 @@ export default async function ArticlesPage({ searchParams }: PageProps) {
       {/* Table */}
       <div className="rounded-sm border border-border bg-card overflow-hidden">
         {/* Table head */}
-        <div className="hidden md:grid grid-cols-[1fr_100px_100px_140px_100px] items-center h-11 px-5 bg-secondary border-b border-border">
+        <div className="hidden md:grid md:grid-cols-[minmax(260px,1fr)_88px_110px_120px_200px] items-center gap-x-3 h-11 px-5 bg-secondary border-b border-border">
           <span className="text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">Title</span>
           <span className="text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">League</span>
           <span className="text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">Status</span>
@@ -125,7 +125,7 @@ export default async function ArticlesPage({ searchParams }: PageProps) {
         ) : (
           <div className="divide-y divide-border">
             {articles.map((article) => (
-              <div key={article.id} className="grid grid-cols-1 md:grid-cols-[1fr_100px_100px_140px_100px] items-center min-h-[64px] px-5 py-4 hover:bg-accent transition-colors">
+              <div key={article.id} className="grid grid-cols-1 md:grid-cols-[minmax(260px,1fr)_88px_110px_120px_200px] items-center gap-x-3 min-h-[64px] px-5 py-4 hover:bg-accent transition-colors">
                 {/* Title */}
                 <div className="flex flex-col gap-0.5">
                   <span className="text-sm font-medium text-foreground">{article.title}</span>
@@ -146,11 +146,9 @@ export default async function ArticlesPage({ searchParams }: PageProps) {
                   <span className={`rounded-sm px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase ${
                     article.status === "PUBLISHED"
                       ? "bg-vcl-gold text-vcl-gold-foreground"
-                      : article.status === "DRAFT"
-                      ? "bg-accent text-muted-foreground border border-border"
                       : "bg-accent text-muted-foreground border border-border"
                   }`}>
-                    {article.status}
+                    {article.status === "ARCHIVED" ? "Unlisted" : article.status}
                   </span>
                   {article.featured && (
                     <span className="rounded-sm border border-vcl-gold/40 px-1.5 py-0.5 text-[9px] font-bold tracking-widest text-vcl-gold uppercase">
@@ -173,17 +171,11 @@ export default async function ArticlesPage({ searchParams }: PageProps) {
                     <Pencil className="h-3 w-3" />
                     Edit
                   </Link>
-                  <form action={deleteArticle}>
-                    <input type="hidden" name="id" value={article.id} />
-                    <button
-                      type="submit"
-                      className="inline-flex items-center gap-1.5 rounded-sm border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:border-red-500/40 hover:text-red-400 transition-colors"
-                      aria-label={`Delete ${article.title}`}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                      Delete
-                    </button>
-                  </form>
+                  <DeleteArticleButton
+                    id={article.id}
+                    className="inline-flex items-center gap-1.5 rounded-sm border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:border-red-500/40 hover:text-red-400 transition-colors disabled:opacity-60"
+                    label="Delete"
+                  />
                 </div>
               </div>
             ))}

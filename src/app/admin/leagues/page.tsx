@@ -38,7 +38,7 @@ export default async function LeaguesPage() {
 
       {/* Table */}
       <div className="rounded-sm border border-border bg-card overflow-hidden">
-        <div className="hidden lg:grid grid-cols-[1fr_100px_1fr_1fr_100px_120px] items-center h-11 px-5 bg-secondary border-b border-border">
+        <div className="hidden lg:grid lg:grid-cols-[minmax(180px,1fr)_80px_minmax(190px,1fr)_minmax(170px,1fr)_88px_190px] items-center gap-x-2 h-11 px-5 bg-secondary border-b border-border">
           {["League","Code","Conferences","Divisions","Status","Actions"].map((h) => (
             <span key={h} className="text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">{h}</span>
           ))}
@@ -48,7 +48,7 @@ export default async function LeaguesPage() {
         ) : (
           <div className="divide-y divide-border">
             {leagueConfigs.map((league) => (
-              <div key={league.id} className="grid grid-cols-1 lg:grid-cols-[1fr_100px_1fr_1fr_100px_120px] items-center min-h-[52px] px-5 py-3 lg:py-0 hover:bg-accent transition-colors">
+              <div key={league.id} className="grid grid-cols-1 lg:grid-cols-[minmax(180px,1fr)_80px_minmax(190px,1fr)_minmax(170px,1fr)_88px_190px] items-center gap-x-2 min-h-[56px] px-5 py-3 lg:py-0 hover:bg-accent transition-colors">
                 <span className="text-sm font-medium text-foreground">{league.name}</span>
                 <span className="hidden lg:block">
                   <span className="rounded-sm bg-vcl-gold px-2 py-0.5 text-[10px] font-bold tracking-widest text-vcl-gold-foreground uppercase">{league.code}</span>
@@ -56,16 +56,34 @@ export default async function LeaguesPage() {
                 <div className="hidden lg:flex flex-wrap gap-1">
                   {league.conferences.length === 0
                     ? <span className="text-xs text-muted-foreground">—</span>
-                    : league.conferences.map((c) => (
-                        <span key={c.id} className="rounded-sm border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground">{c.name}</span>
-                      ))}
+                    : (
+                      <>
+                        {league.conferences.slice(0, 2).map((c) => (
+                          <span key={c.id} className="rounded-sm border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground">{c.name}</span>
+                        ))}
+                        {league.conferences.length > 2 && (
+                          <span className="rounded-sm border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                            +{league.conferences.length - 2} others
+                          </span>
+                        )}
+                      </>
+                    )}
                 </div>
                 <div className="hidden lg:flex flex-wrap gap-1">
                   {league.divisions.length === 0
                     ? <span className="text-xs text-muted-foreground">—</span>
-                    : league.divisions.map((d) => (
-                        <span key={d.id} className="rounded-sm border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground uppercase">{d.code ?? d.name}</span>
-                      ))}
+                    : (
+                      <>
+                        {league.divisions.slice(0, 3).map((d) => (
+                          <span key={d.id} className="rounded-sm border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground uppercase">{d.code ?? d.name}</span>
+                        ))}
+                        {league.divisions.length > 3 && (
+                          <span className="rounded-sm border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                            +{league.divisions.length - 3} others
+                          </span>
+                        )}
+                      </>
+                    )}
                 </div>
                 <span className="hidden lg:block">
                   <span className={`rounded-sm px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase ${league.active ? "bg-vcl-gold text-vcl-gold-foreground" : "border border-border text-muted-foreground"}`}>

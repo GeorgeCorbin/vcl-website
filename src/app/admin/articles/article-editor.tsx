@@ -2,14 +2,18 @@
 
 import Image from "next/image";
 import { useRef, useState, useTransition } from "react";
+import { useEffect } from "react";
+import { useNavGuard } from "@/lib/nav-guard";
 import { uploadImageAction } from "./actions";
 import { isUploadedImage } from "@/lib/upload-path";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eye, ImageIcon, Calendar, X } from "lucide-react";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { Eye, ImageIcon, Calendar, X, ArrowLeft, Lock } from "lucide-react";
 import { TiptapEditor, type TiptapEditorHandle } from "@/components/editor/tiptap-editor";
+import { CoverImageEditor, type FocalPoint } from "./cover-image-editor";
 import { ArticleStatus } from "@prisma/client";
 
 type ArticleEditorProps = {
@@ -21,6 +25,9 @@ type ArticleEditorProps = {
     excerpt: string | null;
     content: string;
     coverImage: string | null;
+    coverFocalX?: number | null;
+    coverFocalY?: number | null;
+    photographerCredit: string | null;
     status: ArticleStatus;
     featured: boolean;
     author: string | null;
@@ -37,7 +44,7 @@ type ArticleEditorProps = {
 const statuses: { label: string; value: ArticleStatus }[] = [
   { label: "Draft", value: "DRAFT" },
   { label: "Published", value: "PUBLISHED" },
-  { label: "Archived", value: "ARCHIVED" },
+  { label: "Unlisted", value: "ARCHIVED" },
 ];
 
 const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
@@ -59,18 +66,34 @@ function estimateArticlePayloadSize(fields: Record<string, string>) {
   return new Blob(Object.values(fields)).size;
 }
 
+function toLocalDatetimeString(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function nowLocalString(): string {
+  return toLocalDatetimeString(new Date());
+}
+
 export function ArticleEditor({ mode, article, initialImages, leagues, formAction, deleteSlot }: ArticleEditorProps) {
   const [title, setTitle] = useState(article?.title ?? "");
   const [slug, setSlug] = useState(article?.slug ?? "");
   const [excerpt, setExcerpt] = useState(article?.excerpt ?? "");
   const [content, setContent] = useState(article?.content ?? "");
   const [coverPreview, setCoverPreview] = useState(article?.coverImage ?? "");
-  const [selectedStatus, setSelectedStatus] = useState<ArticleStatus>(article?.status ?? "DRAFT");
+  const [focal, setFocal] = useState<FocalPoint>({
+    x: article?.coverFocalX ?? 50,
+    y: article?.coverFocalY ?? 50,
+  });
+  const [photographerCredit, setPhotographerCredit] = useState(article?.photographerCredit ?? "");
+  const [selectedStatus, setSelectedStatus] = useState<ArticleStatus | "">(article?.status ?? "");
   const [featured, setFeatured] = useState(article?.featured ?? false);
   const [author, setAuthor] = useState(article?.author ?? "");
-  const [league, setLeague] = useState<string>(article?.league ?? (leagues[0]?.code || ""));
+  const [league, setLeague] = useState<string>(article?.league ?? "");
   const [publishDate, setPublishDate] = useState(
-    article?.publishedAt ? new Date(article.publishedAt).toISOString().slice(0, 16) : ""
+    article?.publishedAt && article.status !== "PUBLISHED"
+      ? toLocalDatetimeString(new Date(article.publishedAt))
+      : ""
   );
   const [showPreview, setShowPreview] = useState(false);
   const [images, setImages] = useState(initialImages);
@@ -84,7 +107,45 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
   );
   const [tagInput, setTagInput] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [isDirty, setIsDirty] = useState(false);
+  const [showPublishModal, setShowPublishModal] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const editorRef = useRef<TiptapEditorHandle>(null);
+  const { setDirty: setGuardDirty, guardNavigate } = useNavGuard();
+
+  // Keep the global nav guard in sync with local dirty state
+  useEffect(() => {
+    setGuardDirty(isDirty);
+  }, [isDirty, setGuardDirty]);
+
+  // Clear guard when the editor unmounts
+  useEffect(() => {
+    return () => setGuardDirty(false);
+  }, [setGuardDirty]);
+
+  const isAlreadyPublished = article?.status === "PUBLISHED" && Boolean(article?.publishedAt);
+  const publishDateLocked = isAlreadyPublished && selectedStatus === "PUBLISHED";
+
+  const isScheduledForFuture =
+    selectedStatus === "PUBLISHED" &&
+    !publishDateLocked &&
+    Boolean(publishDate) &&
+    Number.isFinite(new Date(publishDate).getTime()) &&
+    new Date(publishDate).getTime() > Date.now();
+
+  const submitLabel =
+    !selectedStatus || selectedStatus === "DRAFT"
+      ? "Save"
+      : selectedStatus === "PUBLISHED"
+      ? publishDateLocked
+        ? "Update Published"
+        : isScheduledForFuture
+        ? "Schedule Publish"
+        : "Publish Article"
+      : mode === "create"
+      ? "Create Article"
+      : "Save Changes";
 
   const addTag = (value: string) => {
     const trimmed = value.trim().toLowerCase();
@@ -153,12 +214,47 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
     setCoverFile(file);
     const previewUrl = URL.createObjectURL(file);
     setCoverPreview(previewUrl);
+    // Reset focal point to centre for a newly chosen image
+    setFocal({ x: 50, y: 50 });
+    setValidationErrors((err) => { const n = {...err}; delete n.cover; return n; });
+  };
+
+  const validate = (): Record<string, string> => {
+    const errors: Record<string, string> = {};
+    if (!selectedStatus) errors.status = "Status is required.";
+    if (selectedStatus === "PUBLISHED") {
+      if (!league) errors.league = "League is required before publishing.";
+      if (!coverPreview) errors.cover = "A cover image is required before publishing.";
+      if (tags.length < 2) errors.tags = `At least 2 tags are required before publishing (${tags.length} added).`;
+    }
+    return errors;
+  };
+
+  const doSubmit = () => {
+    const errors = validate();
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      // Scroll to first error
+      setTimeout(() => {
+        document.querySelector("[data-validation-error]")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 50);
+      return;
+    }
+    setValidationErrors({});
+    if (selectedStatus === "PUBLISHED") {
+      setShowPublishModal(true);
+    } else {
+      handleSubmit(new FormData());
+    }
   };
 
   const handleSubmit = (formData: FormData) => {
     setSubmitError(null);
     startTransition(async () => {
       try {
+        // Ensure the article id is always present when editing
+        if (article?.id) formData.set("id", article.id);
+
         let coverPath = "";
         if (coverPreview) {
           if (coverFile) {
@@ -187,7 +283,10 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
         formData.set("status", selectedStatus);
         formData.set("featured", featured ? "on" : "");
         formData.set("author", author);
-        formData.set("league", league);
+        formData.set("photographerCredit", photographerCredit);
+        formData.set("coverFocalX", String(focal.x));
+        formData.set("coverFocalY", String(focal.y));
+        formData.set("league", league === "__none__" ? "" : league);
         formData.set("coverImageCurrent", coverPath);
         formData.delete("tags");
         tags.forEach((tag) => formData.append("tags", tag));
@@ -211,11 +310,16 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
           return;
         }
 
+        setIsDirty(false);
         await formAction(formData);
       } catch (error) {
         setSubmitError(getSaveErrorMessage(error));
       }
     });
+  };
+
+  const handleBack = () => {
+    guardNavigate("/admin/articles");
   };
 
   return (
@@ -255,7 +359,7 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
         </section>
       )}
 
-      <form action={handleSubmit} className="space-y-8">
+      <form action={handleSubmit} onChange={() => setIsDirty(true)} className="space-y-8">
         {article?.id && <input type="hidden" name="id" value={article.id} />}
         <input type="hidden" name="coverImageCurrent" value={article?.coverImage ?? ""} />
 
@@ -278,17 +382,23 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
 
           <div className="space-y-2">
             <Label>Content</Label>
-            <TiptapEditor ref={editorRef} value={content} onChange={setContent} />
+            <TiptapEditor ref={editorRef} value={content} onChange={(val) => { setContent(val); setIsDirty(true); }} />
           </div>
         </section>
 
         <section className="rounded-sm border border-border bg-card p-6 space-y-6">
+          {/* Status + Author */}
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
-              <Select value={selectedStatus} onValueChange={(value) => setSelectedStatus(value as ArticleStatus)}>
-                <SelectTrigger id="status">
-                  <SelectValue placeholder="Select status" />
+              <Select value={selectedStatus} onValueChange={(value) => {
+                setSelectedStatus(value as ArticleStatus);
+                setIsDirty(true);
+                setValidationErrors((e) => { const n = {...e}; delete n.status; return n; });
+                if (value !== "PUBLISHED") setPublishDate("");
+              }}>
+                <SelectTrigger id="status" className={validationErrors.status ? "border-red-500/60" : ""}>
+                  <SelectValue placeholder="————" />
                 </SelectTrigger>
                 <SelectContent>
                   {statuses.map((option) => (
@@ -298,6 +408,7 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
                   ))}
                 </SelectContent>
               </Select>
+              {validationErrors.status && <p className="text-xs text-red-400">{validationErrors.status}</p>}
             </div>
 
             <div className="space-y-2">
@@ -313,11 +424,12 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
 
           <div className="space-y-2">
             <Label htmlFor="league">League</Label>
-            <Select value={league} onValueChange={setLeague}>
+            <Select value={league} onValueChange={(v) => { setLeague(v); setIsDirty(true); }}>
               <SelectTrigger id="league">
                 <SelectValue placeholder="Select league" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="__none__">N/A</SelectItem>
                 {leagues.map((l) => (
                   <SelectItem key={l.id} value={l.code}>
                     {l.code}
@@ -325,28 +437,55 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
                 ))}
               </SelectContent>
             </Select>
+            {validationErrors.league && <p className="text-xs text-red-400">{validationErrors.league}</p>}
           </div>
 
+          {/* Publish Date */}
           <div className="space-y-2">
             <Label htmlFor="publishDate" className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" /> Publish Date (optional)
+              <Calendar className="h-4 w-4" />
+              {publishDateLocked ? "Published On" : "Schedule Publish (optional)"}
             </Label>
-            <Input
-              id="publishDate"
-              type="datetime-local"
-              value={publishDate}
-              onChange={(e) => setPublishDate(e.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">Leave empty to publish immediately when status is set to Published</p>
+            {publishDateLocked ? (
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center gap-2 h-9 rounded-sm border border-border bg-muted/30 px-3 text-sm text-muted-foreground select-none">
+                  <Lock className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
+                  {new Date(article!.publishedAt!).toLocaleString(undefined, {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Locked while published — switch to Draft or Unlisted to change.
+                </p>
+              </div>
+            ) : (
+              <>
+                <Input
+                  id="publishDate"
+                  type="datetime-local"
+                  value={publishDate}
+                  min={nowLocalString()}
+                  onChange={(e) => setPublishDate(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Leave empty to publish immediately. Cannot be set in the past.
+                </p>
+              </>
+            )}
           </div>
 
-          <div className="space-y-2">
-            <Label>Tags</Label>
+          {/* Tags */}
+          <div className="space-y-2" data-validation-error={validationErrors.tags ? true : undefined}>
+            <Label>
+              Tags
+              <span className="ml-1 font-normal text-muted-foreground text-xs">(min. 2 required to publish)</span>
+            </Label>
             <div className="flex flex-wrap gap-1.5 mb-2">
               {tags.map((tag) => (
                 <span key={tag} className="inline-flex items-center gap-1 rounded-full border border-border bg-accent px-2.5 py-0.5 text-xs text-muted-foreground">
                   {tag}
-                  <button type="button" onClick={() => removeTag(tag)} className="hover:text-foreground transition-colors">
+                  <button type="button" onClick={() => { removeTag(tag); setIsDirty(true); }} className="hover:text-foreground transition-colors">
                     <X className="h-3 w-3" />
                   </button>
                 </span>
@@ -360,6 +499,8 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
                   if (e.key === "Enter" || e.key === ",") {
                     e.preventDefault();
                     addTag(tagInput);
+                    setIsDirty(true);
+                    setValidationErrors((err) => { const n = {...err}; delete n.tags; return n; });
                   }
                 }}
                 placeholder="Type a tag and press Enter"
@@ -367,15 +508,18 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
               />
               <button
                 type="button"
-                onClick={() => addTag(tagInput)}
+                onClick={() => { addTag(tagInput); setIsDirty(true); setValidationErrors((err) => { const n = {...err}; delete n.tags; return n; }); }}
                 className="rounded-sm border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground hover:border-vcl-gold/40 transition-colors"
               >
                 Add
               </button>
             </div>
-            <p className="text-xs text-muted-foreground">Press Enter or comma to add a tag. Tags are created automatically if they don&apos;t exist.</p>
+            {validationErrors.tags
+              ? <p className="text-xs text-red-400">{validationErrors.tags}</p>
+              : <p className="text-xs text-muted-foreground">Press Enter or comma to add a tag. New tags are saved automatically.</p>}
           </div>
 
+          {/* Featured */}
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -388,34 +532,41 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
           </div>
         </section>
 
-        <section className="rounded-sm border border-border bg-card p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase flex items-center gap-2">
-                <ImageIcon className="h-3.5 w-3.5" /> Cover Image
-              </h3>
-              <p className="text-sm text-muted-foreground mt-1">Featured image displayed at the top of the article.</p>
-            </div>
-            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-sm border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:border-vcl-gold/40 hover:text-vcl-gold transition-colors">
-              {coverPreview ? "Change" : "Upload"}
-              <input type="file" name="coverImageFile" accept="image/*" className="hidden" onChange={handleCoverChange} />
-            </label>
+        {/* Cover Image */}
+        <section
+          className="rounded-sm border border-border bg-card p-6 space-y-4"
+          data-validation-error={validationErrors.cover ? true : undefined}
+        >
+          <div>
+            <h3 className={`text-[10px] font-bold tracking-[0.15em] uppercase flex items-center gap-2 ${validationErrors.cover ? "text-red-400" : "text-muted-foreground"}`}>
+              <ImageIcon className="h-3.5 w-3.5" /> Cover Image
+              <span className="text-[9px] font-normal normal-case tracking-normal text-muted-foreground">(required to publish)</span>
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">Featured image displayed at the top of the article.</p>
           </div>
+
           {coverPreview ? (
-            <div className="relative aspect-video w-full max-w-md overflow-hidden rounded-sm border border-border">
-              <Image src={coverPreview} alt="Cover preview" fill className="object-cover" sizes="400px" unoptimized={isUploadedImage(coverPreview)} />
-              <button
-                type="button"
-                onClick={() => { setCoverPreview(""); setCoverFile(null); setCoverError(null); }}
-                className="absolute right-2 top-2 rounded-sm bg-black/60 px-2 py-1 text-xs text-white hover:bg-black/80"
-              >
-                Remove
-              </button>
-            </div>
+            <CoverImageEditor
+              src={coverPreview}
+              focal={focal}
+              onFocalChange={(f) => { setFocal(f); setIsDirty(true); }}
+              onUpload={handleCoverChange}
+              onRemove={() => { setCoverPreview(""); setCoverFile(null); setCoverError(null); setFocal({ x: 50, y: 50 }); }}
+              coverError={coverError}
+              validationError={validationErrors.cover}
+              photographerCredit={photographerCredit}
+              onPhotographerCreditChange={(v) => { setPhotographerCredit(v); setIsDirty(true); }}
+            />
           ) : (
-            <p className="text-sm text-muted-foreground">No cover image set.</p>
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">No cover image set.</p>
+              <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-sm border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:border-vcl-gold/40 hover:text-vcl-gold transition-colors">
+                Upload Cover Photo
+                <input type="file" name="coverImageFile" accept="image/*" className="hidden" onChange={handleCoverChange} />
+              </label>
+              {validationErrors.cover && <p className="text-sm text-red-400">{validationErrors.cover}</p>}
+            </div>
           )}
-          {coverError && <p className="text-sm text-red-400">{coverError}</p>}
         </section>
 
         <section className="rounded-sm border border-border bg-card p-6 space-y-4">
@@ -461,37 +612,87 @@ export function ArticleEditor({ mode, article, initialImages, leagues, formActio
         )}
 
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between pt-2">
-          <div>{deleteSlot}</div>
           <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={() => {
-                setTitle(article?.title ?? "");
-                setSlug(article?.slug ?? "");
-                setExcerpt(article?.excerpt ?? "");
-                setContent(article?.content ?? "");
-                setCoverPreview(article?.coverImage ?? "");
-                setCoverFile(null);
-                setCoverError(null);
-                setSubmitError(null);
-                setSelectedStatus(article?.status ?? "DRAFT");
-                setFeatured(article?.featured ?? false);
-                setAuthor(article?.author ?? "");
-              }}
+              onClick={handleBack}
+              className="inline-flex items-center gap-1.5 rounded-sm border border-border px-4 h-10 text-sm font-semibold text-muted-foreground hover:border-vcl-gold/40 hover:text-vcl-gold transition-colors"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Back to Articles
+            </button>
+            {deleteSlot}
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setShowResetModal(true)}
               className="inline-flex items-center gap-1.5 rounded-sm border border-border px-4 h-10 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
             >
               Reset
             </button>
             <button
-              type="submit"
+              type="button"
               disabled={isPending}
+              onClick={doSubmit}
               className="inline-flex items-center gap-1.5 rounded-sm bg-vcl-gold px-5 h-10 text-sm font-bold text-vcl-gold-foreground hover:bg-vcl-gold/90 transition-colors disabled:opacity-60"
             >
-              {isPending ? "Saving..." : mode === "create" ? "Publish Article" : "Save Changes"}
+              {isPending ? "Saving..." : submitLabel}
             </button>
           </div>
         </div>
       </form>
+
+      {/* Publish confirmation */}
+      <ConfirmModal
+        open={showPublishModal}
+        onOpenChange={setShowPublishModal}
+        title={isScheduledForFuture ? "Schedule this article?" : "Publish this article?"}
+        description={
+          isScheduledForFuture
+            ? `This article will be published on ${new Date(publishDate).toLocaleString()}. You can unpublish it at any time.`
+            : "This will make the article live and visible to all visitors. You can unpublish it at any time."
+        }
+        confirmLabel={isScheduledForFuture ? "Schedule Publish" : "Publish Article"}
+        onConfirm={() => handleSubmit(new FormData())}
+      />
+
+      {/* Reset confirmation */}
+      <ConfirmModal
+        open={showResetModal}
+        onOpenChange={setShowResetModal}
+        title="Reset all changes?"
+        description="This will discard every unsaved edit and restore the form to its last saved state."
+        confirmLabel="Reset"
+        variant="destructive"
+        onConfirm={() => {
+          const originalContent = article?.content ?? "";
+          setTitle(article?.title ?? "");
+          setSlug(article?.slug ?? "");
+          setExcerpt(article?.excerpt ?? "");
+          setContent(originalContent);
+          // Imperatively reset the Tiptap editor's internal state
+          editorRef.current?.setContent(originalContent);
+          setCoverPreview(article?.coverImage ?? "");
+          setFocal({ x: article?.coverFocalX ?? 50, y: article?.coverFocalY ?? 50 });
+          setPhotographerCredit(article?.photographerCredit ?? "");
+          setCoverFile(null);
+          setCoverError(null);
+          setSubmitError(null);
+          setValidationErrors({});
+          setSelectedStatus(article?.status ?? "");
+          setPublishDate(
+            article?.publishedAt && article.status !== "PUBLISHED"
+              ? toLocalDatetimeString(new Date(article.publishedAt))
+              : ""
+          );
+          setFeatured(article?.featured ?? false);
+          setAuthor(article?.author ?? "");
+          setLeague(article?.league ?? "");
+          setIsDirty(false);
+        }}
+      />
+
     </div>
   );
 }

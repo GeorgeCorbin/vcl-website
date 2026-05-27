@@ -1,9 +1,23 @@
+ "use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FaInstagram, FaXTwitter, FaYoutube } from "react-icons/fa6";
 import { FEATURES } from "@/lib/feature-flags";
 import { VclLogo } from "@/components/layout/vcl-logo";
 
 export function Footer() {
+  const router = useRouter();
+
+  const handleAdminClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    const hasAdminSession = document.cookie
+      .split("; ")
+      .some((cookie) => cookie === "vcl_admin_session=authenticated");
+
+    router.push(hasAdminSession ? "/admin" : "/admin/login");
+  };
+
   return (
     <footer className="border-t border-border bg-secondary">
       {/* Main footer grid */}
@@ -87,7 +101,11 @@ export function Footer() {
               <li><Link href="/about" className="hover:text-foreground transition-colors">About</Link></li>
               <li><Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link></li>
               <li><Link href="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link></li>
-              <li><Link href="/admin/login" className="hover:text-foreground transition-colors">Admin Login</Link></li>
+              <li>
+                <Link href="/admin/login" onClick={handleAdminClick} className="hover:text-foreground transition-colors">
+                  Admin Login
+                </Link>
+              </li>
             </ul>
           </div>
         </div>

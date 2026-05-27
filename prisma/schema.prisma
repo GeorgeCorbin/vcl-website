@@ -67,20 +67,23 @@ enum Role {
 // ==================== EDITORIAL CONTENT ====================
 
 model Article {
-  id          String        @id @default(cuid())
-  title       String
-  slug        String        @unique
-  excerpt     String?
-  content     String        @db.Text
-  coverImage  String?
-  status      ArticleStatus @default(DRAFT)
-  featured    Boolean       @default(false)
-  author      String?
-  league      String?
-  publishedAt DateTime?
-  tags        Tag[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id                  String        @id @default(cuid())
+  title               String
+  slug                String        @unique
+  excerpt             String?
+  content             String        @db.Text
+  coverImage          String?
+  coverFocalX         Float?
+  coverFocalY         Float?
+  photographerCredit  String?
+  status              ArticleStatus @default(DRAFT)
+  featured            Boolean       @default(false)
+  author              String?
+  league              String?
+  publishedAt         DateTime?
+  tags                Tag[]
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
 
   @@index([status])
   @@index([publishedAt])

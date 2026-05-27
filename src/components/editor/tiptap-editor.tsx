@@ -25,6 +25,7 @@ import {
 
 export type TiptapEditorHandle = {
   insertImage: (src: string) => void;
+  setContent: (html: string) => void;
 };
 
 type TiptapEditorProps = {
@@ -130,6 +131,11 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, TiptapEditorProps>(
         } else {
           chain.setImage({ src }).run();
         }
+      },
+      setContent: (html: string) => {
+        if (!editor) return;
+        // Pass emitUpdate=false so this doesn't fire onChange and re-dirty the form
+        editor.commands.setContent(html || "", { emitUpdate: false });
       },
     }));
 

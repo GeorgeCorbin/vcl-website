@@ -8,6 +8,8 @@ type Slide = {
   title: string;
   league: string | null;
   slug: string;
+  focalX?: number | null;
+  focalY?: number | null;
 };
 
 type Props = {
@@ -52,6 +54,7 @@ export function HeroCarousel({ slides, children }: Props) {
           alt=""
           aria-hidden="true"
           className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ${fading ? "opacity-0" : "opacity-100"}`}
+          style={{ objectPosition: `${slide.focalX ?? 50}% ${slide.focalY ?? 50}%` }}
         />
       )}
 

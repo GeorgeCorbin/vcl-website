@@ -8,6 +8,8 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminDashboard() {
   const showMediaPolls = FEATURES.MEDIA_POLLS;
+  const showAdsAdmin = FEATURES.ADS_ADMIN;
+  const showTeams = FEATURES.MEDIA_POLLS;
 
   // Fetch stats in parallel
   const [articlesCount, publishedPollsCount, activeTeamsCount] = await Promise.all([
@@ -68,13 +70,15 @@ export default async function AdminDashboard() {
           href: "/admin/polls",
         }]
       : []),
-    {
-      title: "Teams",
-      value: activeTeamsCount.toString(),
-      description: "Active teams",
-      icon: Users,
-      href: "/admin/teams",
-    },
+    ...(showTeams
+      ? [{
+          title: "Teams",
+          value: activeTeamsCount.toString(),
+          description: "Active teams",
+          icon: Users,
+          href: "/admin/teams",
+        }]
+      : []),
   ];
   return (
     <div className="space-y-8">
@@ -122,13 +126,15 @@ export default async function AdminDashboard() {
                 <span className="text-xs text-muted-foreground">Set up a new weekly media poll</span>
               </Link>
             )}
-            <Link
-              href="/admin/ads"
-              className="flex flex-col gap-1 rounded-sm border border-border p-4 hover:border-vcl-gold/40 hover:bg-accent transition-colors"
-            >
-              <span className="text-sm font-semibold text-foreground">Manage Ad Units</span>
-              <span className="text-xs text-muted-foreground">Configure ad placements across the site</span>
-            </Link>
+            {showAdsAdmin && (
+              <Link
+                href="/admin/ads"
+                className="flex flex-col gap-1 rounded-sm border border-border p-4 hover:border-vcl-gold/40 hover:bg-accent transition-colors"
+              >
+                <span className="text-sm font-semibold text-foreground">Manage Ad Units</span>
+                <span className="text-xs text-muted-foreground">Configure ad placements across the site</span>
+              </Link>
+            )}
           </div>
         </div>
 

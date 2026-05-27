@@ -81,6 +81,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Sea
                           src={article.coverImage}
                           alt={article.title}
                           className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          style={{ objectPosition: `${(article as typeof article & { coverFocalX?: number | null }).coverFocalX ?? 50}% ${(article as typeof article & { coverFocalY?: number | null }).coverFocalY ?? 50}%` }}
                         />
                       )}
                     </div>
