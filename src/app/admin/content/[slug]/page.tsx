@@ -1,10 +1,11 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import prisma from "@/lib/db";
 import { updatePageContent } from "../actions";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { FEATURES } from "@/lib/feature-flags";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -20,6 +21,8 @@ const pageMetadata: Record<string, { title: string; description: string }> = {
 };
 
 export default async function EditContentPage({ params }: PageProps) {
+  if (!FEATURES.CONTENT_ADMIN) redirect("/admin");
+
   const { slug } = await params;
   
   if (!pageMetadata[slug]) {

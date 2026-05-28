@@ -50,7 +50,8 @@ export default async function HomePage() {
           </h1>
           <p className="mt-6 text-base text-muted-foreground max-w-xl leading-relaxed">
             Comprehensive coverage of MCLA, SMLL, NCLL, WCLL and more — news, analysis,
-            and weekly media poll rankings.
+            and in-depth league coverage.
+       
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link

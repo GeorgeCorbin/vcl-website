@@ -35,8 +35,8 @@ export default function AboutPage() {
             <h2 className="font-heading text-3xl tracking-wide text-foreground mb-5">OUR MISSION</h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Varsity Club Lacrosse is dedicated to providing in-depth coverage of club lacrosse.
-              While our primary focus is on the Men&apos;s Collegiate Lacrosse Association (MCLA),
-              we also cover SMLL, NCLL, WCLL, and other club leagues. We aim to be the go-to
+              We cover several leagues including the Men&apos;s Collegiate Lacrosse Association (MCLA),
+              Southern Men&apos;s Lacrosse League (SMLL), National College Lacrosse League (NCLL), Women&apos;s Collegiate Lacrosse League (WCLL) and more. We aim to be the go-to
               destination for {missionFocusText()} for the club lacrosse community.
             </p>
           </section>

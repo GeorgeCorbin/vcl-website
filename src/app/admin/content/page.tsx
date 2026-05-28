@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { format } from "date-fns";
 import { FileText, Pencil } from "lucide-react";
 import prisma from "@/lib/db";
+import { FEATURES } from "@/lib/feature-flags";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -13,6 +15,8 @@ const defaultPages = [
 ] as const;
 
 export default async function ContentManagementPage() {
+  if (!FEATURES.CONTENT_ADMIN) redirect("/admin");
+
   const pages = await prisma.page.findMany({
     orderBy: { slug: "asc" },
     select: { id: true, slug: true, title: true, content: true, updatedAt: true },

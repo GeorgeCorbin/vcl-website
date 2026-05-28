@@ -29,7 +29,7 @@ const allNavItems = [
   { href: "/admin/polls", label: "Media Polls", icon: BarChart3, feature: "MEDIA_POLLS" as const },
   { href: "/admin/transfers", label: "Transfers", icon: ArrowLeftRight, feature: "TRANSFERS" as const },
   { href: "/admin/leagues", label: "Leagues", icon: Trophy, feature: null },
-  { href: "/admin/content", label: "Content", icon: FileEdit, feature: null },
+  { href: "/admin/content", label: "Content", icon: FileEdit, feature: "CONTENT_ADMIN" as const },
   { href: "/admin/ads", label: "Ads", icon: Megaphone, feature: "ADS_ADMIN" as const },
   { href: "/admin/settings", label: "Settings", icon: Settings, feature: null },
 ];

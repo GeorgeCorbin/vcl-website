@@ -1,17 +1,15 @@
 "use client";
 
-import Image from "next/image";
 import { useRef, useState, useTransition } from "react";
 import { useEffect } from "react";
 import { useNavGuard } from "@/lib/nav-guard";
 import { uploadImageAction } from "./actions";
-import { isUploadedImage } from "@/lib/upload-path";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
-import { Eye, ImageIcon, Calendar, X, ArrowLeft, Lock } from "lucide-react";
+import { Eye, EyeOff, ImageIcon, Calendar, X, ArrowLeft, Lock } from "lucide-react";
 import { TiptapEditor, type TiptapEditorHandle } from "@/components/editor/tiptap-editor";
 import { CoverImageEditor, type FocalPoint } from "./cover-image-editor";
 import { ArticleStatus } from "@prisma/client";
@@ -63,6 +61,25 @@ function getSaveErrorMessage(error: unknown): string {
 
 function estimateArticlePayloadSize(fields: Record<string, string>) {
   return new Blob(Object.values(fields)).size;
+}
+
+function injectImageCreditsClient(html: string): string {
+  return html.replace(
+    /<img([^>]*?)>/gi,
+    (fullMatch, attrs) => {
+      const creditMatch = attrs.match(/data-credit="([^"]*)"/)
+      if (!creditMatch || !creditMatch[1].trim()) return fullMatch;
+      const credit = creditMatch[1].trim();
+      const styleMatch = attrs.match(/style="([^"]*)"/)
+      const styleValue = styleMatch?.[1] ?? "";
+      const widthMatch = styleValue.match(/width:\s*(\d+%)/);
+      const imageWidth = widthMatch?.[1];
+      const figStyle = [imageWidth ? `width: ${imageWidth}` : "", "display: block", "margin: 0 auto"].filter(Boolean).join("; ");
+      const cleanedStyle = styleValue.replace(/width:\s*[^;]+;?\s*/g,"").replace(/height:\s*auto;?\s*/g,"").replace(/display:\s*[^;]+;?\s*/g,"").replace(/margin[^:]*:\s*[^;]+;?\s*/g,"").replace(/;+$/,"").trim();
+      const cleanedAttrs = styleMatch ? (cleanedStyle ? attrs.replace(/style="[^"]*"/,`style="${cleanedStyle}"`) : attrs.replace(/\s*style="[^"]*"/,"")) : attrs;
+      return `<figure style="${figStyle}"><img${cleanedAttrs}><figcaption style="font-size:0.75rem;font-style:italic;color:#666;margin-top:0.25rem;text-align:center">Photo by ${credit}</figcaption></figure>`;
+    }
+  );
 }
 
 function toLocalDatetimeString(date: Date): string {
@@ -288,65 +305,257 @@ export function ArticleEditor({ mode, article, leagues, formAction, deleteSlot }
   };
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-border pb-6">
-        <div>
-          <h1 className="font-heading text-4xl tracking-wide text-foreground">
-            {mode === "create" ? "New Article" : "Edit Article"}
+    <div className="space-y-0">
+      {/* ── Top bar ── */}
+      <div className="flex items-center justify-between gap-4 border-b border-border pb-5 mb-8">
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={handleBack}
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-vcl-gold transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Articles
+          </button>
+          <span className="h-4 w-px bg-border" />
+          <h1 className="font-heading text-2xl tracking-wide text-foreground">
+            {mode === "create" ? "New Article" : (title || "Edit Article")}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {mode === "create" ? "Draft — unsaved" : "Draft — edit and save changes"}
-          </p>
+          {isDirty && (
+            <span className="rounded-sm bg-vcl-gold/10 border border-vcl-gold/30 px-2 py-0.5 text-[10px] font-bold tracking-widest text-vcl-gold uppercase">
+              Unsaved
+            </span>
+          )}
         </div>
-        <button
-          type="button"
-          onClick={() => setShowPreview(!showPreview)}
-          className="inline-flex items-center gap-2 rounded-sm border border-border px-4 h-9 text-xs font-semibold text-muted-foreground hover:border-vcl-gold/40 hover:text-vcl-gold transition-colors shrink-0"
-        >
-          <Eye className="h-3.5 w-3.5" />
-          {showPreview ? "Hide Preview" : "Preview"}
-        </button>
+        <div className="flex items-center gap-2">
+          {deleteSlot}
+        </div>
       </div>
 
+      {/* ── Preview Modal ── */}
       {showPreview && (
-        <section className="rounded-sm border border-border bg-card p-6">
-          <h2 className="mb-4 text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">Article Preview</h2>
-          <div className="prose prose-invert max-w-none">
-            {coverPreview && (
-              <div className="relative mb-6 aspect-video w-full overflow-hidden rounded-sm">
-                <Image src={coverPreview} alt="Cover" fill className="object-cover" sizes="800px" unoptimized={isUploadedImage(coverPreview)} />
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center bg-black/80 backdrop-blur-sm overflow-y-auto py-8 px-4"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowPreview(false); }}
+        >
+          <div className="relative w-full max-w-[1100px] rounded-sm border border-border bg-[#0A0A0A] shadow-2xl flex flex-col overflow-hidden">
+
+            {/* Modal top bar */}
+            <div className="flex items-center justify-between gap-4 border-b border-border bg-[#141414] px-6 h-14 shrink-0">
+              <div className="flex items-center gap-3">
+                <span className="rounded-sm bg-vcl-gold/10 border border-vcl-gold/30 px-2 py-0.5 text-[10px] font-bold tracking-widest text-vcl-gold uppercase">Preview</span>
+                <span className="text-sm text-muted-foreground truncate">{title || "Untitled Article"}</span>
               </div>
-            )}
-            <h1>{title || "Untitled Article"}</h1>
-            {excerpt && <p className="lead text-muted-foreground">{excerpt}</p>}
-            <div dangerouslySetInnerHTML={{ __html: content }} />
+              <button
+                type="button"
+                onClick={() => setShowPreview(false)}
+                className="inline-flex items-center gap-2 rounded-sm border border-border px-3 h-8 text-xs font-semibold text-muted-foreground hover:border-vcl-gold/40 hover:text-vcl-gold transition-colors shrink-0"
+              >
+                <EyeOff className="h-3.5 w-3.5" />
+                Close
+              </button>
+            </div>
+
+            {/* Hero */}
+            <div className="relative h-[360px] overflow-hidden bg-[#0d0d0d] shrink-0">
+              {coverPreview ? (
+                <img
+                  src={coverPreview}
+                  alt={title}
+                  className="absolute inset-0 h-full w-full object-cover"
+                  style={{ objectPosition: `${focal.x}% ${focal.y}%` }}
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center bg-[#111]">
+                  <span className="text-xs text-muted-foreground/40">No cover image</span>
+                </div>
+              )}
+              <div className="absolute inset-0" style={{background: "linear-gradient(180deg, #00000000 0%, #0A0A0Acc 55%, #0A0A0A 90%)"}}/>
+              <div className="absolute bottom-0 left-0 right-0 px-8 pb-7">
+                <div className="flex items-center gap-2 mb-3">
+                  {league && league !== "__none__" && (
+                    <span className="rounded-sm bg-vcl-gold px-2.5 py-1 text-[9px] font-bold tracking-[0.15em] text-[#0A0A0A] uppercase">{league}</span>
+                  )}
+                  {featured && (
+                    <span className="rounded-sm border border-white/25 px-2.5 py-1 text-[9px] font-bold tracking-[0.15em] text-white uppercase">Featured</span>
+                  )}
+                </div>
+                <h1 className="font-heading text-[38px] leading-none tracking-wide text-white max-w-[700px]">
+                  {title || "Untitled Article"}
+                </h1>
+              </div>
+            </div>
+
+            {/* Body + Sidebar */}
+            <div className="flex gap-10 px-8 py-10 items-start">
+
+              {/* Main content */}
+              <div className="flex-1 min-w-0">
+                {/* Byline */}
+                <div className="flex items-center gap-3 text-[13px] pb-7 mb-7 border-b border-border flex-wrap">
+                  {author && <span className="font-semibold text-white">By {author}</span>}
+                  {author && <span className="text-muted-foreground">·</span>}
+                  <span className="text-muted-foreground">{new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
+                  <span className="text-muted-foreground">·</span>
+                  <span className="text-muted-foreground">1 min read</span>
+                </div>
+
+                {/* Content */}
+                <div
+                  className="prose prose-invert prose-sm md:prose-base max-w-none
+                    prose-headings:font-heading prose-headings:tracking-wide
+                    prose-a:text-vcl-gold prose-a:no-underline hover:prose-a:underline
+                    prose-strong:text-foreground
+                    prose-blockquote:border-l-vcl-gold prose-blockquote:text-muted-foreground
+                    prose-figcaption:text-xs prose-figcaption:italic prose-figcaption:text-muted-foreground/70 prose-figcaption:mt-1 prose-figcaption:text-center"
+                  dangerouslySetInnerHTML={{ __html: injectImageCreditsClient(content) }}
+                />
+
+                {/* Inline ad filler */}
+                <div className="my-8 flex items-center justify-center rounded-sm border border-dashed border-border bg-secondary/40 h-[90px]">
+                  <span className="text-[10px] font-bold tracking-[0.15em] text-muted-foreground/40 uppercase">Advertisement</span>
+                </div>
+
+                {/* Tags */}
+                {tags.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-2 pt-6 mt-6 border-t border-border">
+                    <span className="text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">Tags:</span>
+                    {tags.map((tag) => (
+                      <span key={tag} className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">{tag}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Sidebar */}
+              <aside className="w-[240px] shrink-0 flex flex-col gap-5">
+                {/* Ad filler — 300×250 */}
+                <div className="flex items-center justify-center rounded-sm border border-dashed border-border bg-secondary/40" style={{height: 200}}>
+                  <span className="text-[10px] font-bold tracking-[0.15em] text-muted-foreground/40 uppercase">Ad 300×250</span>
+                </div>
+
+                {/* Related articles filler */}
+                <div className="rounded-sm border border-border bg-card p-4">
+                  <h3 className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase pb-4 border-b border-border">Related Articles</h3>
+                  <div className="flex flex-col">
+                    {[
+                      { league: "MCLA", title: "MCLA Week 8 Power Rankings: The Top Teams Shake Up" },
+                      { league: "MCLA", title: "Transfer Portal Roundup: Key Moves to Watch" },
+                      { league: "SMLL", title: "Spring Season Preview: Who Makes a Run?" },
+                    ].map((rel, i) => (
+                      <div key={i} className="flex flex-col gap-1 py-3 border-b border-border last:border-0 opacity-60">
+                        <span className="text-[10px] font-bold tracking-[0.15em] text-vcl-gold uppercase">{rel.league}</span>
+                        <span className="text-[12px] font-semibold text-foreground leading-snug">{rel.title}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Ad filler — 300×600 */}
+                <div className="flex items-center justify-center rounded-sm border border-dashed border-border bg-secondary/40" style={{height: 300}}>
+                  <span className="text-[10px] font-bold tracking-[0.15em] text-muted-foreground/40 uppercase">Ad 300×600</span>
+                </div>
+              </aside>
+
+            </div>
           </div>
-        </section>
+        </div>
       )}
 
-      <form action={handleSubmit} onChange={() => setIsDirty(true)} className="space-y-8">
+      {/* ── Two-column layout ── */}
+      <form action={handleSubmit} onChange={() => setIsDirty(true)} className="flex gap-8 items-start">
         {article?.id && <input type="hidden" name="id" value={article.id} />}
         <input type="hidden" name="coverImageCurrent" value={article?.coverImage ?? ""} />
 
-        <section className="rounded-sm border border-border bg-card p-6 space-y-6">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
-              <Input id="title" value={title} onChange={(e) => handleTitleChange(e.target.value)} required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="slug">Slug</Label>
-              <Input id="slug" value={slug} onChange={(e) => setSlug(e.target.value)} required />
+        {/* ── Left: content ── */}
+        <div className="flex-1 min-w-0 space-y-5">
+
+          {/* Title */}
+          <div className="space-y-1.5">
+            <Label htmlFor="title" className="text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">Title</Label>
+            <Input
+              id="title"
+              value={title}
+              onChange={(e) => handleTitleChange(e.target.value)}
+              placeholder="Article title"
+              className="text-base font-semibold h-11"
+              required
+            />
+          </div>
+
+          {/* Slug */}
+          <div className="space-y-1.5">
+            <Label htmlFor="slug" className="text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">Slug</Label>
+            <div className="flex items-center rounded-sm border border-border bg-background focus-within:border-vcl-gold/60 transition-colors overflow-hidden">
+              <span className="pl-3 text-xs text-muted-foreground/60 select-none shrink-0">/articles/</span>
+              <input
+                id="slug"
+                value={slug}
+                onChange={(e) => setSlug(e.target.value)}
+                required
+                className="flex-1 bg-transparent py-2 pr-3 text-sm focus:outline-none text-foreground"
+              />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="excerpt">Excerpt</Label>
-            <Textarea id="excerpt" value={excerpt} onChange={(e) => setExcerpt(e.target.value)} rows={3} />
+          {/* Excerpt */}
+          <div className="space-y-1.5">
+            <Label htmlFor="excerpt" className="text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">Excerpt</Label>
+            <Textarea
+              id="excerpt"
+              value={excerpt}
+              onChange={(e) => setExcerpt(e.target.value)}
+              rows={3}
+              placeholder="Short summary shown in article cards and search results…"
+            />
           </div>
 
-          <div className="space-y-2">
-            <Label>Content</Label>
+          {/* Cover Image */}
+          <div
+            className="rounded-sm border border-border bg-card overflow-hidden"
+            data-validation-error={validationErrors.cover ? true : undefined}
+          >
+            <div className={`px-4 py-3 border-b border-border bg-secondary flex items-center justify-between`}>
+              <p className={`text-[10px] font-bold tracking-[0.15em] uppercase ${validationErrors.cover ? "text-red-400" : "text-muted-foreground"}`}>
+                Cover Image
+              </p>
+              {!coverPreview && (
+                <label className="cursor-pointer text-[10px] font-semibold text-muted-foreground hover:text-vcl-gold transition-colors">
+                  Upload
+                  <input type="file" name="coverImageFile" accept="image/*" className="hidden" onChange={handleCoverChange} />
+                </label>
+              )}
+            </div>
+            <div className="p-3">
+              {coverPreview ? (
+                <CoverImageEditor
+                  src={coverPreview}
+                  focal={focal}
+                  onFocalChange={(f) => { setFocal(f); setIsDirty(true); }}
+                  onUpload={handleCoverChange}
+                  onRemove={() => { setCoverPreview(""); setCoverFile(null); setCoverError(null); setFocal({ x: 50, y: 50 }); }}
+                  coverError={coverError}
+                  validationError={validationErrors.cover}
+                  photographerCredit={photographerCredit}
+                  onPhotographerCreditChange={(v) => { setPhotographerCredit(v); setIsDirty(true); }}
+                />
+              ) : (
+                <div className="aspect-video flex flex-col items-center justify-center gap-2 rounded-sm border border-dashed border-border bg-secondary/50">
+                  <ImageIcon className="h-6 w-6 text-muted-foreground/40" />
+                  <label className="cursor-pointer text-xs font-semibold text-muted-foreground hover:text-vcl-gold transition-colors">
+                    Click to upload
+                    <input type="file" name="coverImageFile" accept="image/*" className="hidden" onChange={handleCoverChange} />
+                  </label>
+                  {validationErrors.cover && <p className="text-xs text-red-400 text-center px-2">{validationErrors.cover}</p>}
+                </div>
+              )}
+              {coverError && <p className="mt-2 text-xs text-red-400">{coverError}</p>}
+            </div>
+          </div>
+
+          {/* Rich text editor */}
+          <div className="space-y-1.5">
+            <Label className="text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">Content</Label>
             <TiptapEditor
               ref={editorRef}
               value={content}
@@ -372,227 +581,217 @@ export function ArticleEditor({ mode, article, leagues, formAction, deleteSlot }
                 }
               }}
             />
-          </div>
-        </section>
-
-        <section className="rounded-sm border border-border bg-card p-6 space-y-6">
-          {/* Status + Author */}
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select value={selectedStatus} onValueChange={(value) => {
-                setSelectedStatus(value as ArticleStatus);
-                setIsDirty(true);
-                setValidationErrors((e) => { const n = {...e}; delete n.status; return n; });
-                if (value !== "PUBLISHED") setPublishDate("");
-              }}>
-                <SelectTrigger id="status" className={validationErrors.status ? "border-red-500/60" : ""}>
-                  <SelectValue placeholder="————" />
-                </SelectTrigger>
-                <SelectContent>
-                  {statuses.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {validationErrors.status && <p className="text-xs text-red-400">{validationErrors.status}</p>}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="author">Author</Label>
-              <Input
-                id="author"
-                value={author}
-                onChange={(e) => setAuthor(e.target.value)}
-                placeholder="Enter author name"
-              />
-            </div>
+            {uploadError && <p className="text-xs text-red-400">{uploadError}</p>}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="league">League</Label>
-            <Select value={league} onValueChange={(v) => { setLeague(v); setIsDirty(true); }}>
-              <SelectTrigger id="league">
-                <SelectValue placeholder="Select league" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__none__">N/A</SelectItem>
-                {leagues.map((l) => (
-                  <SelectItem key={l.id} value={l.code}>
-                    {l.code}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {validationErrors.league && <p className="text-xs text-red-400">{validationErrors.league}</p>}
-          </div>
-
-          {/* Publish Date */}
-          <div className="space-y-2">
-            <Label htmlFor="publishDate" className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              {publishDateLocked ? "Published On" : "Schedule Publish (optional)"}
-            </Label>
-            {publishDateLocked ? (
-              <div className="flex flex-col gap-1.5">
-                <div className="flex items-center gap-2 h-9 rounded-sm border border-border bg-muted/30 px-3 text-sm text-muted-foreground select-none">
-                  <Lock className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
-                  {new Date(article!.publishedAt!).toLocaleString(undefined, {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                  })}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Locked while published — switch to Draft or Unlisted to change.
-                </p>
-              </div>
-            ) : (
-              <>
-                <Input
-                  id="publishDate"
-                  type="datetime-local"
-                  value={publishDate}
-                  min={nowLocalString()}
-                  onChange={(e) => setPublishDate(e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Leave empty to publish immediately. Cannot be set in the past.
-                </p>
-              </>
-            )}
-          </div>
-
-          {/* Tags */}
-          <div className="space-y-2" data-validation-error={validationErrors.tags ? true : undefined}>
-            <Label>
-              Tags
-              <span className="ml-1 font-normal text-muted-foreground text-xs">(min. 2 required to publish)</span>
-            </Label>
-            <div className="flex flex-wrap gap-1.5 mb-2">
-              {tags.map((tag) => (
-                <span key={tag} className="inline-flex items-center gap-1 rounded-full border border-border bg-accent px-2.5 py-0.5 text-xs text-muted-foreground">
-                  {tag}
-                  <button type="button" onClick={() => { removeTag(tag); setIsDirty(true); }} className="hover:text-foreground transition-colors">
-                    <X className="h-3 w-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <Input
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === ",") {
-                    e.preventDefault();
-                    addTag(tagInput);
-                    setIsDirty(true);
-                    setValidationErrors((err) => { const n = {...err}; delete n.tags; return n; });
-                  }
-                }}
-                placeholder="Type a tag and press Enter"
-                className="flex-1"
-              />
-              <button
-                type="button"
-                onClick={() => { addTag(tagInput); setIsDirty(true); setValidationErrors((err) => { const n = {...err}; delete n.tags; return n; }); }}
-                className="rounded-sm border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground hover:border-vcl-gold/40 transition-colors"
-              >
-                Add
-              </button>
-            </div>
-            {validationErrors.tags
-              ? <p className="text-xs text-red-400">{validationErrors.tags}</p>
-              : <p className="text-xs text-muted-foreground">Press Enter or comma to add a tag. New tags are saved automatically.</p>}
-          </div>
-
-          {/* Featured */}
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="featured"
-              checked={featured}
-              onChange={(e) => setFeatured(e.target.checked)}
-              className="h-4 w-4 rounded border-border"
-            />
-            <Label htmlFor="featured">Featured article</Label>
-          </div>
-        </section>
-
-        {/* Cover Image */}
-        <section
-          className="rounded-sm border border-border bg-card p-6 space-y-4"
-          data-validation-error={validationErrors.cover ? true : undefined}
-        >
-          <div>
-            <h3 className={`text-[10px] font-bold tracking-[0.15em] uppercase flex items-center gap-2 ${validationErrors.cover ? "text-red-400" : "text-muted-foreground"}`}>
-              <ImageIcon className="h-3.5 w-3.5" /> Cover Image
-              <span className="text-[9px] font-normal normal-case tracking-normal text-muted-foreground">(required to publish)</span>
-            </h3>
-            <p className="text-sm text-muted-foreground mt-1">Featured image displayed at the top of the article.</p>
-          </div>
-
-          {coverPreview ? (
-            <CoverImageEditor
-              src={coverPreview}
-              focal={focal}
-              onFocalChange={(f) => { setFocal(f); setIsDirty(true); }}
-              onUpload={handleCoverChange}
-              onRemove={() => { setCoverPreview(""); setCoverFile(null); setCoverError(null); setFocal({ x: 50, y: 50 }); }}
-              coverError={coverError}
-              validationError={validationErrors.cover}
-              photographerCredit={photographerCredit}
-              onPhotographerCreditChange={(v) => { setPhotographerCredit(v); setIsDirty(true); }}
-            />
-          ) : (
-            <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">No cover image set.</p>
-              <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-sm border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:border-vcl-gold/40 hover:text-vcl-gold transition-colors">
-                Upload Cover Photo
-                <input type="file" name="coverImageFile" accept="image/*" className="hidden" onChange={handleCoverChange} />
-              </label>
-              {validationErrors.cover && <p className="text-sm text-red-400">{validationErrors.cover}</p>}
+          {/* Submit error */}
+          {submitError && (
+            <div className="rounded-sm border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+              {submitError}
             </div>
           )}
-        </section>
 
-        {submitError && (
-          <div className="rounded-sm border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-            {submitError}
-          </div>
-        )}
-
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between pt-2">
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={handleBack}
-              className="inline-flex items-center gap-1.5 rounded-sm border border-border px-4 h-10 text-sm font-semibold text-muted-foreground hover:border-vcl-gold/40 hover:text-vcl-gold transition-colors"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              Back to Articles
-            </button>
-            {deleteSlot}
-          </div>
-          <div className="flex items-center gap-3">
+          {/* Bottom action bar */}
+          <div className="flex items-center justify-between pt-2 pb-4 border-t border-border">
             <button
               type="button"
               onClick={() => setShowResetModal(true)}
-              className="inline-flex items-center gap-1.5 rounded-sm border border-border px-4 h-10 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
-              Reset
+              Reset changes
             </button>
             <button
               type="button"
               disabled={isPending}
               onClick={doSubmit}
-              className="inline-flex items-center gap-1.5 rounded-sm bg-vcl-gold px-5 h-10 text-sm font-bold text-vcl-gold-foreground hover:bg-vcl-gold/90 transition-colors disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-sm bg-vcl-gold px-6 h-10 text-sm font-bold text-vcl-gold-foreground hover:bg-vcl-gold/90 transition-colors disabled:opacity-60"
             >
               {isPending ? "Saving..." : submitLabel}
             </button>
           </div>
+        </div>
+
+        {/* ── Right: sidebar ── */}
+        <div className="w-[300px] shrink-0 sticky top-6 space-y-4">
+
+          {/* Status */}
+          <div className="rounded-sm border border-border bg-card overflow-hidden">
+            <div className="px-4 py-3 border-b border-border bg-secondary">
+              <p className="text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">Publish</p>
+            </div>
+            <div className="px-4 py-4 space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="status" className="text-xs text-muted-foreground">Status</Label>
+                <Select value={selectedStatus} onValueChange={(value) => {
+                  setSelectedStatus(value as ArticleStatus);
+                  setIsDirty(true);
+                  setValidationErrors((e) => { const n = {...e}; delete n.status; return n; });
+                  if (value !== "PUBLISHED") setPublishDate("");
+                }}>
+                  <SelectTrigger id="status" className={validationErrors.status ? "border-red-500/60" : ""}>
+                    <SelectValue placeholder="Select status…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {statuses.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {validationErrors.status && <p className="text-xs text-red-400">{validationErrors.status}</p>}
+              </div>
+
+              {/* Publish date */}
+              <div className="space-y-1.5">
+                <Label htmlFor="publishDate" className="text-xs text-muted-foreground flex items-center gap-1.5">
+                  <Calendar className="h-3 w-3" />
+                  {publishDateLocked ? "Published on" : "Schedule (optional)"}
+                </Label>
+                {publishDateLocked ? (
+                  <div className="flex items-center gap-2 h-9 rounded-sm border border-border bg-muted/30 px-3 text-xs text-muted-foreground select-none">
+                    <Lock className="h-3 w-3 shrink-0 opacity-50" />
+                    {new Date(article!.publishedAt!).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
+                  </div>
+                ) : (
+                  <Input
+                    id="publishDate"
+                    type="datetime-local"
+                    value={publishDate}
+                    min={nowLocalString()}
+                    onChange={(e) => setPublishDate(e.target.value)}
+                    className="text-xs"
+                  />
+                )}
+                {publishDateLocked && (
+                  <p className="text-[11px] text-muted-foreground/70">Switch to Draft to change.</p>
+                )}
+              </div>
+
+              <button
+                type="button"
+                disabled={isPending}
+                onClick={doSubmit}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-sm bg-vcl-gold h-9 text-sm font-bold text-vcl-gold-foreground hover:bg-vcl-gold/90 transition-colors disabled:opacity-60"
+              >
+                {isPending ? "Saving..." : submitLabel}
+              </button>
+            </div>
+          </div>
+
+          {/* League + Author */}
+          <div className="rounded-sm border border-border bg-card overflow-hidden">
+            <div className="px-4 py-3 border-b border-border bg-secondary">
+              <p className="text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">Details</p>
+            </div>
+            <div className="px-4 py-4 space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="author" className="text-xs text-muted-foreground">Author</Label>
+                <Input
+                  id="author"
+                  value={author}
+                  onChange={(e) => setAuthor(e.target.value)}
+                  placeholder="Author name"
+                  className="text-sm"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="league" className="text-xs text-muted-foreground">League</Label>
+                <Select value={league} onValueChange={(v) => { setLeague(v); setIsDirty(true); }}>
+                  <SelectTrigger id="league" className={validationErrors.league ? "border-red-500/60" : ""}>
+                    <SelectValue placeholder="Select league…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">N/A</SelectItem>
+                    {leagues.map((l) => (
+                      <SelectItem key={l.id} value={l.code}>
+                        {l.code}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {validationErrors.league && <p className="text-xs text-red-400">{validationErrors.league}</p>}
+              </div>
+              {/* Featured toggle */}
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <div
+                  onClick={() => { setFeatured(!featured); setIsDirty(true); }}
+                  className={`relative h-5 w-9 rounded-full border transition-colors shrink-0 ${featured ? "bg-vcl-gold border-vcl-gold" : "bg-secondary border-border"}`}
+                >
+                  <span className={`absolute inset-y-0 my-auto h-3.5 w-3.5 rounded-full bg-white shadow transition-transform ${featured ? "translate-x-[18px]" : "translate-x-[3px]"}`} />
+                </div>
+                <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
+                  Featured article
+                </span>
+              </label>
+            </div>
+          </div>
+
+          {/* Tags */}
+          <div
+            className="rounded-sm border border-border bg-card overflow-hidden"
+            data-validation-error={validationErrors.tags ? true : undefined}
+          >
+            <div className="px-4 py-3 border-b border-border bg-secondary flex items-center justify-between">
+              <p className="text-[10px] font-bold tracking-[0.15em] text-muted-foreground uppercase">Tags</p>
+              <span className="text-[10px] text-muted-foreground/60">min. 2 to publish</span>
+            </div>
+            <div className="px-4 py-4 space-y-3">
+              {tags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {tags.map((tag) => (
+                    <span key={tag} className="inline-flex items-center gap-1 rounded-full border border-border bg-accent px-2.5 py-0.5 text-xs text-muted-foreground">
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => { removeTag(tag); setIsDirty(true); }}
+                        className="hover:text-foreground transition-colors"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              <div className="flex gap-1.5">
+                <Input
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === ",") {
+                      e.preventDefault();
+                      addTag(tagInput);
+                      setIsDirty(true);
+                      setValidationErrors((err) => { const n = {...err}; delete n.tags; return n; });
+                    }
+                  }}
+                  placeholder="Add a tag…"
+                  className="flex-1 text-xs h-8"
+                />
+                <button
+                  type="button"
+                  onClick={() => { addTag(tagInput); setIsDirty(true); setValidationErrors((err) => { const n = {...err}; delete n.tags; return n; }); }}
+                  className="rounded-sm border border-border px-2.5 h-8 text-xs font-semibold text-muted-foreground hover:border-vcl-gold/40 hover:text-vcl-gold transition-colors shrink-0"
+                >
+                  Add
+                </button>
+              </div>
+              {validationErrors.tags
+                ? <p className="text-xs text-red-400">{validationErrors.tags}</p>
+                : <p className="text-[11px] text-muted-foreground/60">Enter or comma to add. Auto-created if new.</p>}
+            </div>
+          </div>
+
+          {/* Preview */}
+          <button
+            type="button"
+            onClick={() => setShowPreview(true)}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-sm border border-border h-9 text-xs font-semibold text-muted-foreground hover:border-vcl-gold/40 hover:text-vcl-gold transition-colors"
+          >
+            <Eye className="h-3.5 w-3.5" />
+            Preview Article
+          </button>
+
         </div>
       </form>
 

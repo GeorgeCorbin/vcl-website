@@ -18,6 +18,9 @@ export const FEATURES = {
   /** Ad Management section in admin sidebar (create/edit ad units in the DB) */
   ADS_ADMIN: false,
 
+  /** Static content management section in admin (about/privacy/terms pages) */
+  CONTENT_ADMIN: false,
+
   /** Render ad slots on public-facing pages */
   ADS_PUBLIC: true,
 } as const;
