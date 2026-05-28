@@ -1,7 +1,7 @@
 import Link from "next/link";
 import prisma from "@/lib/db";
-import { Plus, Settings, Trash2 } from "lucide-react";
-import { deleteLeagueConfig } from "./actions";
+import { Plus, Settings } from "lucide-react";
+import { DeleteLeagueButton } from "./delete-league-button";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -94,12 +94,7 @@ export default async function LeaguesPage() {
                   <Link href={`/admin/leagues/${league.id}`} className="inline-flex items-center gap-1.5 rounded-sm border border-border px-2.5 py-1.5 text-xs font-semibold text-muted-foreground hover:border-vcl-gold/40 hover:text-vcl-gold transition-colors">
                     <Settings className="h-3 w-3" /> Configure
                   </Link>
-                  <form action={deleteLeagueConfig}>
-                    <input type="hidden" name="id" value={league.id} />
-                    <button type="submit" className="inline-flex items-center gap-1.5 rounded-sm border border-border px-2.5 py-1.5 text-xs font-semibold text-muted-foreground hover:border-red-500/40 hover:text-red-400 transition-colors">
-                      <Trash2 className="h-3 w-3" /> Delete
-                    </button>
-                  </form>
+                  <DeleteLeagueButton id={league.id} leagueName={league.name} />
                 </div>
               </div>
             ))}

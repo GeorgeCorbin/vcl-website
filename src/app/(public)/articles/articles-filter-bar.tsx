@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Search, X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 
 interface ArticlesFilterBarProps {
   activeLeague?: string;
@@ -14,6 +14,7 @@ interface ArticlesFilterBarProps {
 export function ArticlesFilterBar({ activeLeague, activeSearch, leagues }: ArticlesFilterBarProps) {
   const router = useRouter();
   const [query, setQuery] = useState(activeSearch ?? "");
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setQuery(activeSearch ?? "");
@@ -30,6 +31,12 @@ export function ArticlesFilterBar({ activeLeague, activeSearch, leagues }: Artic
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     router.push(buildHref(activeLeague, query));
+  };
+
+  const handleClear = () => {
+    setQuery("");
+    router.push(buildHref(activeLeague, ""));
+    inputRef.current?.focus();
   };
 
   const filterLeagues = ["All", ...leagues.map((l) => l.code)];
@@ -59,16 +66,33 @@ export function ArticlesFilterBar({ activeLeague, activeSearch, leagues }: Artic
         </div>
         <form
           onSubmit={handleSearch}
-          className="flex items-center gap-2 rounded-sm border border-border bg-card px-3 h-8 w-[220px] focus-within:border-vcl-gold/50 transition-colors"
+          className="flex items-center gap-1 rounded-sm border border-border bg-card px-2 h-8 w-[240px] focus-within:border-vcl-gold/50 transition-colors"
         >
           <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
           <input
+            ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search articles..."
-            className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground outline-none min-w-0"
+            className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground outline-none min-w-0 px-1"
           />
+          {query && (
+            <button
+              type="button"
+              onClick={handleClear}
+              className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
+              aria-label="Clear search"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          )}
+          <button
+            type="submit"
+            className="shrink-0 h-6 px-2 rounded-sm bg-vcl-gold text-vcl-gold-foreground text-[10px] font-bold hover:bg-vcl-gold/90 transition-colors"
+          >
+            Go
+          </button>
         </form>
       </div>
     </div>
