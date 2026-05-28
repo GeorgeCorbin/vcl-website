@@ -36,7 +36,7 @@ export default function AboutPage() {
             <p className="text-sm text-muted-foreground leading-relaxed">
               Varsity Club Lacrosse is dedicated to providing in-depth coverage of club lacrosse.
               We cover several leagues including the Men&apos;s Collegiate Lacrosse Association (MCLA),
-              Southern Men&apos;s Lacrosse League (SMLL), National College Lacrosse League (NCLL), Women&apos;s Collegiate Lacrosse League (WCLL) and more. We aim to be the go-to
+              Southern Men&apos;s Lacrosse League (SMLL), National College Lacrosse League (NCLL), Women&apos;s Collegiate Lacrosse Association (WCLA), Women&apos;s Collegiate Lacrosse Organization (WCLO), and more. We aim to be the go-to
               destination for {missionFocusText()} for the club lacrosse community.
             </p>
           </section>
@@ -56,7 +56,7 @@ export default function AboutPage() {
                 <div className="rounded-sm border border-border bg-card p-5">
                   <h3 className="text-sm font-semibold text-foreground mb-2">Weekly Media Poll</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    Comprehensive weekly rankings of the top teams across MCLA, SMLL, NCLL, and WCLL.
+                    Comprehensive weekly rankings of the top teams across MCLA, SMLL, NCLL, WCLA, and WCLO.
                   </p>
                 </div>
               )}
@@ -73,7 +73,7 @@ export default function AboutPage() {
               <div className="rounded-sm border border-border bg-card p-5">
                 <h3 className="text-sm font-semibold text-foreground mb-2">League Coverage</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Coverage of MCLA, SMLL, NCLL, WCLL and other club leagues across all conferences and divisions.
+                  Coverage of MCLA, SMLL, NCLL, WCLA, WCLO and other club leagues across all conferences and divisions.
                 </p>
               </div>
             </div>

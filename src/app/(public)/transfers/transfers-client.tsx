@@ -13,7 +13,7 @@ type Transfer = {
   toTeam: { name: string } | null;
 };
 
-const leagues = ["All", "MCLA", "SMLL", "NCLL", "WCLL"];
+const leagues = ["All", "MCLA", "SMLL", "NCLL", "WCLA", "WCLO"];
 
 export function TransfersClient({ transfers }: { transfers: Transfer[] }) {
   const [activeLeague, setActiveLeague] = useState("All");

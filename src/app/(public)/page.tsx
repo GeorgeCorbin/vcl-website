@@ -49,7 +49,7 @@ export default async function HomePage() {
             <br />LACROSSE
           </h1>
           <p className="mt-6 text-base text-muted-foreground max-w-xl leading-relaxed">
-            Comprehensive coverage of MCLA, SMLL, NCLL, WCLL and more — news, analysis,
+            Comprehensive coverage of MCLA, SMLL, NCLL, WCLA, WCLO and more — news, analysis,
             and in-depth league coverage.
        
           </p>
@@ -77,7 +77,7 @@ export default async function HomePage() {
       <section className="border-b border-border bg-secondary">
         <div className="mx-auto max-w-[1440px] px-6 md:px-12 h-14 flex items-center justify-between">
           <span className="text-[11px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">
-            Covering MCLA · SMLL · NCLL · WCLL and More
+            Covering MCLA · SMLL · NCLL · WCLA · WCLO and More
           </span>
           <div className="hidden lg:flex items-center justify-center min-w-[300px] max-w-[728px] w-full">
             <HomeLeaderboardAd className="h-10" />

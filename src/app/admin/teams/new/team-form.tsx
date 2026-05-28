@@ -12,7 +12,8 @@ const leagues = [
   { label: "MCLA", value: "MCLA" },
   { label: "SMLL", value: "SMLL" },
   { label: "NCLL", value: "NCLL" },
-  { label: "WCLL", value: "WCLL" },
+  { label: "WCLA", value: "WCLA" },
+  { label: "WCLO", value: "WCLO" },
   { label: "Other", value: "OTHER" },
 ];
 

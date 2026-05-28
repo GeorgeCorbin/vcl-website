@@ -88,7 +88,8 @@ export function Footer() {
               <li><span>MCLA</span></li>
               <li><span>SMLL</span></li>
               <li><span>NCLL</span></li>
-              <li><span>WCLL</span></li>
+              <li><span>WCLA</span></li>
+              <li><span>WCLO</span></li>
             </ul>
           </div>
 

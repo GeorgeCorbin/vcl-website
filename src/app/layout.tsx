@@ -25,7 +25,7 @@ const anton = Anton({
 
 export const metadata: Metadata = {
   title: "Varsity Club Lacrosse",
-  description: "Strictly Club. Strictly Business. Your source for MCLA, SMLL, NCLL, WCLL lacrosse news, rankings, and analysis.",
+  description: "Strictly Club. Strictly Business. Your source for MCLA, SMLL, NCLL, WCLA, WCLO lacrosse news, rankings, and analysis.",
   icons: {
     icon: [{ url: "/vcl_logo3.png", type: "image/png" }],
     apple: [{ url: "/vcl_logo3.png", type: "image/png" }],

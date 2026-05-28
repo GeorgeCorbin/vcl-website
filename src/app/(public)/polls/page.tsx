@@ -25,7 +25,7 @@ export default async function PollsPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const leagues = await getActiveLeagues();
   
-  const validLeagues: League[] = ["MCLA", "SMLL", "NCLL", "WCLL", "OTHER"];
+  const validLeagues: League[] = ["MCLA", "SMLL", "NCLL", "WCLA", "WCLO", "OTHER"];
   const requestedLeague = params.league?.toUpperCase();
   const selectedLeague: League = (
     requestedLeague && validLeagues.includes(requestedLeague as League)

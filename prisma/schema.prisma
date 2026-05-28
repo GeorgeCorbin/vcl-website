@@ -219,7 +219,8 @@ enum League {
   MCLA
   SMLL
   NCLL
-  WCLL
+  WCLA
+  WCLO
   OTHER
 }
 
